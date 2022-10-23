@@ -1,0 +1,18 @@
+profile:
+  max_frequency: 100000000
+  passband:
+    - [1000000, 15000000]
+  compute:
+    - gain
+    - phase
+    - gain_derivative
+    - phase_derivative
+  simulate:
+    domain: geom
+    sample_count: 500
+    derivative_delta: 10
+  weights:
+    gain: 1.0
+    phase: 1.0
+    gain_derivative: 0.2
+    phase_derivative: 0.2

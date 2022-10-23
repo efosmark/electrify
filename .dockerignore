@@ -1,0 +1,7 @@
+.git
+.vscode
+env/
+*.pyc
+.ipynb_checkpoints
+*.swp
+__pycache__

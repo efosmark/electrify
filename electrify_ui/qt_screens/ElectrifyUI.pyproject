@@ -1,0 +1,3 @@
+{
+    "files": ["form.ui","bandselect.ui","namedslider.ui","solutiondialog.ui","bandentrydialog.ui","paginator.ui","frequencyentry.ui","mainwindow.py","icons.qrc"]
+}

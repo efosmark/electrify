@@ -1,0 +1,16 @@
+cycler==0.11.0
+fonttools==4.37.1
+kiwisolver==1.4.4
+matplotlib==3.5.3
+networkx==2.8.6
+numpy==1.23.2
+packaging==21.3
+Pillow==9.2.0
+pyparsing==3.0.9
+python-dateutil==2.8.2
+six==1.16.0
+PyYAML==6.0
+pygad==2.18.1
+PySide6==6.3.2
+PySide6-Addons==6.3.2
+PySide6-Essentials==6.3.2
