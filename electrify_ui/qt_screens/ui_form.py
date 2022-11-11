@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (QApplication, QFormLayout, QFrame, QHBoxLayout,
     QToolBar, QVBoxLayout, QWidget)
 
 from ..bandselect import BandSelect
-from ..bode_plot_canvas import BodePlotCanvas
+from ..figurecanvas import FigureCanvas
 from ..paginator import Paginator
 from ..weightsframe import WeightsFrame
 from . import rc_icons
@@ -31,7 +31,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1182, 457)
+        MainWindow.resize(1182, 461)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout = QVBoxLayout(self.centralwidget)
@@ -128,14 +128,14 @@ class Ui_MainWindow(object):
         self.verticalLayout_4 = QVBoxLayout(self.frame_2)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
-        self.miniplot = BodePlotCanvas(self.frame_2)
-        self.miniplot.setObjectName(u"miniplot")
-        self.miniplot.setMinimumSize(QSize(300, 150))
-        self.miniplot.setMaximumSize(QSize(300, 150))
-        self.miniplot.setLayoutDirection(Qt.LeftToRight)
-        self.miniplot.setStyleSheet(u"background-color:white")
+        self.miniBodePlot = FigureCanvas(self.frame_2)
+        self.miniBodePlot.setObjectName(u"miniBodePlot")
+        self.miniBodePlot.setMinimumSize(QSize(300, 150))
+        self.miniBodePlot.setMaximumSize(QSize(300, 150))
+        self.miniBodePlot.setLayoutDirection(Qt.LeftToRight)
+        self.miniBodePlot.setStyleSheet(u"background-color:white")
 
-        self.verticalLayout_4.addWidget(self.miniplot)
+        self.verticalLayout_4.addWidget(self.miniBodePlot)
 
 
         self.verticalLayout_6.addWidget(self.frame_2, 0, Qt.AlignHCenter)
@@ -232,7 +232,7 @@ class Ui_MainWindow(object):
 
         self.frame = QFrame(self.widget)
         self.frame.setObjectName(u"frame")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.frame.sizePolicy().hasHeightForWidth())
@@ -242,9 +242,9 @@ class Ui_MainWindow(object):
         self.verticalLayout_2 = QVBoxLayout(self.frame)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.mainBodePlot = BodePlotCanvas(self.frame)
+        self.mainBodePlot = FigureCanvas(self.frame)
         self.mainBodePlot.setObjectName(u"mainBodePlot")
-        self.mainBodePlot.setMinimumSize(QSize(800, 300))
+        self.mainBodePlot.setMinimumSize(QSize(500, 200))
         self.mainBodePlot.setMaximumSize(QSize(800, 300))
         self.mainBodePlot.setLayoutDirection(Qt.LeftToRight)
         self.mainBodePlot.setStyleSheet(u"background-color:white")
@@ -289,7 +289,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1182, 22))
+        self.menubar.setGeometry(QRect(0, 0, 1182, 23))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")

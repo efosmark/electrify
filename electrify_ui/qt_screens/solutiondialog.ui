@@ -149,7 +149,7 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_6">
          <item>
-          <widget class="FrequencyEntry" name="startFrequencyInput" native="true">
+          <widget class="FrequencyEntry" name="frequencyInput" native="true">
            <property name="minimumSize">
             <size>
              <width>150</width>
@@ -165,7 +165,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="recomputeBtn">
         <property name="text">
          <string> Recompute</string>
         </property>
@@ -175,6 +175,13 @@
         </property>
         <property name="default">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="closeBtn">
+        <property name="text">
+         <string>Close</string>
         </property>
        </widget>
       </item>
@@ -200,7 +207,7 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
-          <widget class="SolutionCanvas" name="solutionCanvas" native="true"/>
+          <widget class="FigureCanvas" name="circuitCanvas" native="true"/>
          </item>
         </layout>
        </widget>
@@ -224,9 +231,9 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>SolutionCanvas</class>
+   <class>FigureCanvas</class>
    <extends>QWidget</extends>
-   <header>..solutioncanvas</header>
+   <header>..figurecanvas</header>
    <container>1</container>
   </customwidget>
   <customwidget>

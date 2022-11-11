@@ -36,8 +36,8 @@ class Ui_FrequencyEntry(object):
         self.magnitudeInput = QComboBox(FrequencyEntry)
         self.magnitudeInput.addItem(u"Hz")
         self.magnitudeInput.addItem(u"kHz")
-        self.magnitudeInput.addItem(u"MHZ")
-        self.magnitudeInput.addItem(u"GHZ")
+        self.magnitudeInput.addItem(u"MHz")
+        self.magnitudeInput.addItem(u"GHz")
         self.magnitudeInput.setObjectName(u"magnitudeInput")
         self.magnitudeInput.setMaximumSize(QSize(60, 16777215))
 

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1182</width>
-    <height>457</height>
+    <height>461</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -211,7 +211,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="BodePlotCanvas" name="miniplot" native="true">
+              <widget class="FigureCanvas" name="miniBodePlot" native="true">
                <property name="minimumSize">
                 <size>
                  <width>300</width>
@@ -427,7 +427,7 @@
          <item>
           <widget class="QFrame" name="frame">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -452,11 +452,11 @@
              <number>0</number>
             </property>
             <item>
-             <widget class="BodePlotCanvas" name="mainBodePlot" native="true">
+             <widget class="FigureCanvas" name="mainBodePlot" native="true">
               <property name="minimumSize">
                <size>
-                <width>800</width>
-                <height>300</height>
+                <width>500</width>
+                <height>200</height>
                </size>
               </property>
               <property name="maximumSize">
@@ -539,7 +539,7 @@
      <x>0</x>
      <y>0</y>
      <width>1182</width>
-     <height>22</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>
@@ -559,12 +559,6 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>BodePlotCanvas</class>
-   <extends>QWidget</extends>
-   <header>..bode_plot_canvas</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>Paginator</class>
    <extends>QWidget</extends>
    <header>..paginator</header>
@@ -580,6 +574,12 @@
    <class>WeightsFrame</class>
    <extends>QFrame</extends>
    <header>..weightsframe</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>FigureCanvas</class>
+   <extends>QWidget</extends>
+   <header>..figurecanvas</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

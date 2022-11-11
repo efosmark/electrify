@@ -21,8 +21,8 @@ from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QGroupBox,
     QWidget)
 
 from ..bandselect import BandSelect
+from ..figurecanvas import FigureCanvas
 from ..frequencyentry import FrequencyEntry
-from ..solutioncanvas import SolutionCanvas
 from ..weightsframe import WeightsFrame
 from . import rc_icons
 
@@ -116,23 +116,28 @@ class Ui_SolutionDialog(object):
         self.groupBox_6.setObjectName(u"groupBox_6")
         self.verticalLayout_6 = QVBoxLayout(self.groupBox_6)
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
-        self.startFrequencyInput = FrequencyEntry(self.groupBox_6)
-        self.startFrequencyInput.setObjectName(u"startFrequencyInput")
-        self.startFrequencyInput.setMinimumSize(QSize(150, 40))
-        self.startFrequencyInput.setStyleSheet(u"")
+        self.frequencyInput = FrequencyEntry(self.groupBox_6)
+        self.frequencyInput.setObjectName(u"frequencyInput")
+        self.frequencyInput.setMinimumSize(QSize(150, 40))
+        self.frequencyInput.setStyleSheet(u"")
 
-        self.verticalLayout_6.addWidget(self.startFrequencyInput)
+        self.verticalLayout_6.addWidget(self.frequencyInput)
 
 
         self.verticalLayout_4.addWidget(self.groupBox_6)
 
-        self.pushButton = QPushButton(self.widget_2)
-        self.pushButton.setObjectName(u"pushButton")
+        self.recomputeBtn = QPushButton(self.widget_2)
+        self.recomputeBtn.setObjectName(u"recomputeBtn")
         icon1 = QIcon()
         icon1.addFile(u":/icons/icons/Sync.ico", QSize(), QIcon.Normal, QIcon.Off)
-        self.pushButton.setIcon(icon1)
+        self.recomputeBtn.setIcon(icon1)
 
-        self.verticalLayout_4.addWidget(self.pushButton)
+        self.verticalLayout_4.addWidget(self.recomputeBtn)
+
+        self.closeBtn = QPushButton(self.widget_2)
+        self.closeBtn.setObjectName(u"closeBtn")
+
+        self.verticalLayout_4.addWidget(self.closeBtn)
 
 
         self.horizontalLayout.addWidget(self.widget_2)
@@ -148,10 +153,10 @@ class Ui_SolutionDialog(object):
         self.frame.setFrameShadow(QFrame.Raised)
         self.verticalLayout = QVBoxLayout(self.frame)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.solutionCanvas = SolutionCanvas(self.frame)
-        self.solutionCanvas.setObjectName(u"solutionCanvas")
+        self.circuitCanvas = FigureCanvas(self.frame)
+        self.circuitCanvas.setObjectName(u"circuitCanvas")
 
-        self.verticalLayout.addWidget(self.solutionCanvas)
+        self.verticalLayout.addWidget(self.circuitCanvas)
 
 
         self.verticalLayout_3.addWidget(self.frame)
@@ -162,7 +167,7 @@ class Ui_SolutionDialog(object):
 
         self.retranslateUi(SolutionDialog)
 
-        self.pushButton.setDefault(True)
+        self.recomputeBtn.setDefault(True)
 
 
         QMetaObject.connectSlotsByName(SolutionDialog)
@@ -177,6 +182,7 @@ class Ui_SolutionDialog(object):
         self.label.setText(QCoreApplication.translate("SolutionDialog", u"TextLabel", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("SolutionDialog", u"Settings", None))
         self.groupBox_6.setTitle(QCoreApplication.translate("SolutionDialog", u"Test Frequency", None))
-        self.pushButton.setText(QCoreApplication.translate("SolutionDialog", u" Recompute", None))
+        self.recomputeBtn.setText(QCoreApplication.translate("SolutionDialog", u" Recompute", None))
+        self.closeBtn.setText(QCoreApplication.translate("SolutionDialog", u"Close", None))
     # retranslateUi
 

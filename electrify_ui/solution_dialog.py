@@ -9,6 +9,8 @@ from .circuit_canvas import draw_circuit
 
 import electrify as e
 
+from .bode import BodePlotManager
+
 
 class SolutionDialog(QtWidgets.QDialog, Ui_SolutionDialog):
 
@@ -17,32 +19,22 @@ class SolutionDialog(QtWidgets.QDialog, Ui_SolutionDialog):
         self.setupUi(self)
         self.profile = profile
         self.gfd = GeneticCircuit(freq_domain=self.profile.domain)
-        # self.closeBtn.clicked.connect(self.hide)
-        # self.frequencyInput.setValue(e.mega(15))
-        # self.recomputeBtn.clicked.connect(self._onRecompute)
-        # self.circuitCanvas.configure(2000, 2000)
+        self.closeBtn.clicked.connect(self.hide)
+        self.frequencyInput.setValue(e.mega(15))
+        self.recomputeBtn.clicked.connect(self._onRecompute)
 
-        # self.mainBodePlot.configure(
-        #     self.profile,
-        #     ylabel=None,
-        #     xlabel=None,
-        #     width=500,
-        #     height=300
-        # )
+        fig = self.circuitCanvas.figure
+        fig.set_tight_layout(True)
+        gs = gridspec.GridSpec(2, 3, height_ratios=[1, 5], figure=fig)
+        self.axfq = fig.add_subplot(gs[0, 0:2])
+        self.axck = fig.add_subplot(gs[1, :])
 
-        # fig = self.circuitCanvas.figure
-        # gs = gridspec.GridSpec(2, 2, height_ratios=[1, 4], figure=fig)
-        # self.axfq = fig.add_subplot(gs[0, 0])
-        # self.bar_ax = fig.add_subplot(gs[0, 1])
-        # self.axck = fig.add_subplot(gs[1, :])
-
-        # self.mainBodePlot.axfq.set_ylim(-60, 1)
-        # self.mainBodePlot.axdv.set_axis_off()
-        # self.mainBodePlot.axph.set_axis_off()
-        # #self.bar_ax = self.fitnessCanvas.figure.add_subplot(111)
-        # self.bar_container = None
-
-        #self.fitnessCanvas.configure(width=300, height=300, tight=dict(pad=0.3))
+        self.bode = BodePlotManager(self.axfq)
+        self.bode.configure(
+            self.profile.domain,
+            f_max=self.profile.f_max,
+            f_min=self.profile.f_min
+        )
 
     def _onRecompute(self):
         self.solution.chromosome = eval(self.chromosomeText.toPlainText())
@@ -52,10 +44,8 @@ class SolutionDialog(QtWidgets.QDialog, Ui_SolutionDialog):
         if self.solution is not None:
             self.chromosomeText.setPlainText(str(self.solution.chromosome))
 
-            # self.mainBodePlot.plot_fq(self.solution)
-            # self.mainBodePlot.plot_ph(self.solution)
-            # self.mainBodePlot.plot_dv(self.solution)
-            # self.mainBodePlot.draw()
+            self.bode.plot_fq(self.solution)
+            self.bode.plot_ph(self.solution)
 
             # values = [self.solution.ft_gain, self.solution.ft_phase,
             #           self.solution.ft_gain_derivative, self.solution.ft_phase_derivative]
@@ -68,15 +58,13 @@ class SolutionDialog(QtWidgets.QDialog, Ui_SolutionDialog):
             #     self.bar_container.datavalues = values
             # self.fitnessCanvas.draw()
 
-            #c = self.gfd.create_circuit(self.solution.chromosome)
-            # c.solve(f=self.frequencyInput.getValue())
-            # c.solver.annotate()
+            c = self.gfd.create_circuit(self.solution.chromosome)
+            c.solve(f=self.frequencyInput.getValue())
+            c.solver.annotate()
 
-            # self.axck.clear()
-            #draw_circuit(self.axck, c)
-            # self.circuitCanvas.draw()
-
-            # self.mainBodePlot.draw()
+            self.axck.clear()
+            draw_circuit(self.axck, c)
+            self.circuitCanvas.draw()
 
     def display(self, solution: GFDSolution):
         self.solution = solution

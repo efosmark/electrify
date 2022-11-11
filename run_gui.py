@@ -1,6 +1,8 @@
 import electrify as e
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QApplication, QMainWindow
+from electrify.util import logfunc
+from electrify_ui.bode import BodePlotManager
 from gfd.solution import GFDSolution
 from gfd.profile import GFDProfile
 from gfd.gfd_process import GFDThread
@@ -9,6 +11,10 @@ from electrify_ui.qt_screens.ui_form import Ui_MainWindow
 from electrify_ui.solution_dialog import SolutionDialog
 import sys
 import yaml
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 DEFAULT_PROFILE_FILE = './default-profile.yaml'
@@ -21,12 +27,12 @@ class GeneticCircuitMainWindow(QMainWindow, Ui_MainWindow):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.solutions = []
         self.profile = GFDProfile()
         self._init_profile()
         self._initUi()
         self.sln_dialog = SolutionDialog(self.profile)
 
+    @logfunc(logger)
     def _init_profile(self):
         profile = None
         with open(DEFAULT_PROFILE_FILE, 'r') as file:
@@ -52,6 +58,7 @@ class GeneticCircuitMainWindow(QMainWindow, Ui_MainWindow):
         if 'weights' in profile:
             self.profile.weights = profile['weights']
 
+    @logfunc(logger)
     def _initUi(self):
         self.setupUi(self)
         self.uiReady.connect(self._onReady)
@@ -63,63 +70,61 @@ class GeneticCircuitMainWindow(QMainWindow, Ui_MainWindow):
         self.weightsFrame.setWeights(dict(self.profile.weights))
         self.weightsFrame.weightsChanged.connect(self._onWeightsChanged)
 
-        self._init_main_plot()
-        self._init_mini_plot()
+        self._init_plots()
 
         self.uiReady.emit(True)
 
-    def _init_main_plot(self):
-        self.mainBodePlot.configure(
-            self.profile,
+    @logfunc(logger)
+    def _init_plots(self):
+        self.mainBodePlot.figure.set_tight_layout(True)
+        self.axfq = self.mainBodePlot.figure.add_subplot(111)
+        self.bode = BodePlotManager(self.axfq)
+        self.bode.configure(
+            domain=self.profile.domain,
+            f_min=self.profile.f_min,
+            f_max=self.profile.f_max,
             hlines=[0, -3],
-            ylabel=None,
-            xlabel=None,
-            include_polar=False,
             vspans=[
                 *[(a, b, "red") for a, b in self.profile.stopbands],
                 *[(a, b, "green") for a, b in self.profile.passbands]
-            ])
-        self.mainBodePlot.axdv.set_axis_off()
+            ]
+        )
 
-        self.toolbar = PlotNavBar(self.mainBodePlot, self, coordinates=False)
-        self.horizontalLayoutControl.layout().addWidget(self.toolbar)
-
-    def _init_mini_plot(self):
-        self.miniplot.configure(
-            self.profile,
-            tight=dict(pad=0),
+        self.miniBodePlot.figure.set_tight_layout(True)
+        self.axfq_mini = self.miniBodePlot.figure.add_subplot(111)
+        self.minibode = BodePlotManager(self.axfq_mini)
+        self.minibode.configure(
+            domain=self.profile.domain,
+            f_min=self.profile.f_min,
+            f_max=self.profile.f_max,
+            miniplot=True,
             hlines=[-3, -60],
         )
-        self.miniplot.axfq.set_ylim(bottom=-65, top=1)
-        self.miniplot.axfq.set_ybound(lower=-65, upper=1)
-        self.miniplot.axfq.set_axis_off()
-        self.miniplot.axdv.set_axis_off()
-        self.miniplot.axph.set_axis_off()
 
     def _solutionReady(self, solution: GFDSolution):
         if solution.new_best or len(self.paginator.pages) == 0:
             page_id = self.paginator.addPage(solution)
             self.paginator.goToPage(page_id)
 
-        self.miniplot.plot_fq(
+        self.minibode.plot_fq(
             solution,
             width=1,
             color='red',
             alpha=0.25,
             persist=True
         )
-        self.miniplot.plot_ph(solution)
-        # self.miniplot.plot_dv(solution)
-        self.miniplot.draw()
+        self.minibode.plot_ph(solution)
+        self.miniBodePlot.draw()
+
         self.generationLabel.setText(str(solution.generation_id))
         self.circuitLabel.setText(str(solution.circuit_id))
         self.computeTimeLabel.setText('{}S'.format(e.format_value(solution.sim_time)))
         self.fitnessLabel_2.setText('{:.0f}'.format(solution.fitness))
 
     def _onPageChanging(self, page_id, solution: GFDSolution):
-        self.mainBodePlot.plot_fq(solution)
-        # self.mainBodePlot.plot_dv(solution)
-        self.mainBodePlot.plot_ph(solution)
+        self.bode.plot_fq(solution)
+        self.bode.plot_ph(solution)
+        self.bode.axfq.autoscale(enable=True, axis='y')
         self.mainBodePlot.draw()
 
         if solution.fitness and solution.best_fitness:

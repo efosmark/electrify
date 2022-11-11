@@ -58,12 +58,12 @@
      </item>
      <item>
       <property name="text">
-       <string notr="true">MHZ</string>
+       <string notr="true">MHz</string>
       </property>
      </item>
      <item>
       <property name="text">
-       <string notr="true">GHZ</string>
+       <string notr="true">GHz</string>
       </property>
      </item>
     </widget>

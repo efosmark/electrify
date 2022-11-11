@@ -144,6 +144,7 @@ class BodePlotCanvas(FigureCanvas):
             if persist:
                 while len(self.axfq.lines) > 50:
                     self.axfq.lines.pop(0)
+            self.axfq.autoscale()
         else:
             self._fqline.set_ydata(solution.y_gain)
 
