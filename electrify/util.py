@@ -41,9 +41,9 @@ def logfunc(logger, logLevel=logging.DEBUG):
             runtime = time.time() - start
             full_arg_list = [
                 *[str(a) for a in args],
-                *['{}={}'.format(k, str(v)) for k, v in kwargs.items()]
+                *['{}={}'.format(k, str(v)[:20]) for k, v in kwargs.items()]
             ]
-            logger.log(logLevel, 'FUNC:{: <10}|{: ^3}|{: ^10}| ({}) = {}'.format(
+            logger.log(logLevel, 'FUNC:{: <10}|{: ^3}|{: ^10}|{}|{}'.format(
                 func.__name__,
                 wrapped.num_calls,
                 format_value(runtime, unit='s'),

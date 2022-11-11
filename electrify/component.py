@@ -212,12 +212,12 @@ class VoltageSource(Source):
 class CurrentSource(Source):
     UNIT = 'A'
 
-    def __init__(self, current, **kwargs):
+    def __init__(self, current, internal_resistance=np.inf, maximum_voltage=1e3, **kwargs):
         super().__init__(**kwargs)
         self.current = current
 
     def resistance(self):
-        pass
+        return np.inf
 
     def voltage(self):
         pass

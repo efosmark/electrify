@@ -1,26 +1,3 @@
 {
-    "taskExplorer.exclude": [
-        "**/.vscode-test/**",
-        "**/bin/**",
-        "**/build/**",
-        "**/CompiledOutput/**",
-        "**/dist/**",
-        "**/doc/**",
-        "**/ext/**",
-        "**/out/**",
-        "**/output/**",
-        "**/packages/**",
-        "**/release/**",
-        "**/releases/**",
-        "**/samples/**",
-        "**/sdks/**",
-        "**/static/**",
-        "**/target/**",
-        "**/test/**",
-        "**/third_party/**",
-        "**/vendor/**",
-        "**/work/**",
-        "**/.history/**",
-        "**/env/**"
-    ]
+    "python.analysis.typeCheckingMode": "off"
 }
