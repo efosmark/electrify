@@ -12,9 +12,15 @@
                 "isDefault": true
             },
             "presentation": {
-                "reveal": "always",
-                "panel": "new"
-            }
+                "reveal": "silent",
+                "panel": "shared"
+            },
+            "options": {
+                "statusbar": {
+                    "label": "$(debug-start) GUI"
+                }
+            },
+            "dependsOn": "pyside6-project"
         },
         {
             "label": "QT Designer",
@@ -24,7 +30,10 @@
                 "reveal": "never"
             },
             "options": {
-                "cwd": "${workspaceFolder}/electrify_ui/qt_screens/"
+                "cwd": "${workspaceFolder}/electrify_ui/qt_screens/",
+                "statusbar": {
+                    "label": "$(preview) QT Designer"
+                }
             },
             "isBackground": true
         },
@@ -33,13 +42,18 @@
             "type": "shell",
             "presentation": {
                 "echo": true,
-                "reveal": "always",
+                "reveal": "never",
                 "focus": false,
                 "panel": "dedicated",
                 "showReuseMessage": false,
                 "clear": false
             },
             "command": "./scripts/pyside-build.sh",
+            "options": {
+                "statusbar": {
+                    "label": "$(terminal) pyside-build.sh"
+                }
+            }
         }
     ]
 }

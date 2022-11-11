@@ -20,6 +20,6 @@ pyside6-rcc icons.qrc -o icons_rc.py || fail "Unable to bundle icons using pysid
 popd > /dev/null
 
 printf "rc-post-fix\n"
-python scripts/rc-post-fix.py electrify_ui/qt_screens || fail "Unable to post-fix the import statements for rc files."
+./env/bin/python scripts/rc-post-fix.py electrify_ui/qt_screens || fail "Unable to post-fix the import statements for rc files."
 
 printf "\nDone.\n\n"
