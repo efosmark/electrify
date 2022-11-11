@@ -1,5 +1,25 @@
 from gfd.profile import GFDProfile
 from functools import cache
+import numpy as np
+
+
+def sigmoid(x):
+    ''' Apply sigmoid function to x, where 0 < x < 1
+        Returns a value between 0 & 1 that falls on the sigmoid curve.
+    '''
+    return 1 / (1 + np.exp(-(x-0.5)*10))
+
+
+def phase_linearity(phase):
+    dx = []
+    for p1, p2 in zip(phase, phase[1:]):
+        dist1 = p1 - p2
+        if (p1 > 0 and p2 < 0) or (p1 < 0 and p2 > 0):
+            dist = min(abs(p1-p2), abs(90-abs(p1))+abs(90-abs(p2)))
+        else:
+            dist = abs(p1-p2)
+        dx.append(dist)
+    return dx
 
 
 class GFDSolution(object):
@@ -43,10 +63,11 @@ class GFDSolution(object):
     def ft_phase(self) -> float:
         pb_phase = []
         for ph, f in zip(self.y_phase, self.profile.domain):
-            if f in self.profile.passband_domain:
+            if f in self.profile.passband_domain or True:
                 pb_phase.append(abs(ph))
 
-        return -100 * (max(pb_phase) - min(pb_phase)) * self.profile.weights['phase']
+        rotational_dv = phase_linearity(pb_phase)
+        return -1e5 * (max(rotational_dv) - min(rotational_dv)) * self.profile.weights['phase']
 
     @property
     @cache
@@ -61,4 +82,8 @@ class GFDSolution(object):
     @property
     @cache
     def fitness(self) -> float:
+        if self.new_best:
+            print("\n\n\n")
+            print('Gf={:3.3f} Pf={:3.3f}'.format(self.ft_gain, self.ft_phase))
+            print("\n\n\n")
         return self.ft_gain + self.ft_phase  # + self.ft_gain_derivative + self.ft_phase_derivative
