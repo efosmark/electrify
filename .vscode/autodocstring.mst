@@ -1,0 +1,50 @@
+{{summaryPlaceholder}}
+{{^ extendedSummaryPlaceholder}}
+
+{{extendedSummaryPlaceholder}}
+{{/ extendedSummaryPlaceholder}}
+{{#parametersExist}}
+
+Parameters
+----------
+{{#args}}
+ * `{{var}}`:`{{typePlaceholder}}` — {{descriptionPlaceholder}}
+{{/args}}
+{{#kwargsExist}}
+{{#kwargs}}
+ * `{{var}}`:`{{typePlaceholder}}`=`{{&default}}` — {{descriptionPlaceholder}}
+{{/kwargs}}
+{{/kwargsExist}}
+{{/parametersExist}}
+{{#exceptionsExist}}
+
+Raises
+------
+{{#exceptions}}
+ * `{{type}}` — {{descriptionPlaceholder}}
+{{/exceptions}}
+{{/exceptionsExist}}
+{{#yieldsExist}}
+
+Yields
+------
+{{#yields}}
+ * {{typePlaceholder}} — {{descriptionPlaceholder}}
+{{/yields}}
+{{/yieldsExist}}
+{{#returnsExist}}
+
+Returns
+-------
+{{#returns}}
+ * `{{typePlaceholder}}` — {{descriptionPlaceholder}}
+{{/returns}}
+{{/returnsExist}}
+
+Examples
+--------
+>>> # Not yet provided.
+
+References
+----------
+None.

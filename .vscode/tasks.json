@@ -54,6 +54,24 @@
                     "label": "$(terminal) pyside-build.sh"
                 }
             }
+        },
+        {
+            "label": "pip install -e",
+            "type": "shell",
+            "presentation": {
+                "echo": true,
+                "reveal": "never",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": false
+            },
+            "command": "./env/bin/pip install -e .",
+            "options": {
+                "statusbar": {
+                    "label": "$(terminal) pip install -e"
+                }
+            }
         }
     ]
 }
