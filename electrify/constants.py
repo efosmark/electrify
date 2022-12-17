@@ -1,14 +1,13 @@
-import numpy as np
-
+import math
 
 # Fundamental physical constant.
 # Equal to the negative electric charge of an electron.
-# Measured in coloumbs.
+# Measured in coulombs.
 ELEMENTARY_CHARGE = 1.602176634e-19
 
 
 # Effective impedances
-OPEN_CIRCUIT = np.inf
+OPEN_CIRCUIT = math.inf
 SHORT_CIRCUIT = 0
 
 
@@ -29,15 +28,15 @@ PETA = 1e15
 
 VALUE_TYPES = {
     ("femto", "f"): FEMTO,
-    ("pico",  "p"): PICO,
-    ("nano",  "n"): NANO,
+    ("pico", "p"): PICO,
+    ("nano", "n"): NANO,
     ("micro", "u", "µ"): MICRO,
     ("milli", "m"): MILLI,
-    ("kilo",  "k"): KILO,
-    ("mega",  "M"): MEGA,
-    ("giga",  "G"): GIGA,
-    ("tera",  "T"): TERA,
-    ("peta",  "P"): PETA
+    ("kilo", "k"): KILO,
+    ("mega", "M"): MEGA,
+    ("giga", "G"): GIGA,
+    ("tera", "T"): TERA,
+    ("peta", "P"): PETA
 }
 
 
@@ -52,7 +51,7 @@ HERTZ = "HERTZ"  # Unit of frequency
 VOLT = "VOLT"  # Unit of electromotive force
 AMPERE = "AMPERE"  # Unit of current
 WATT = "WATT"  # Unit of power
-COLOUMB = "COLOUMB"  # Unit of charge
+COULOMB = "COULOMB"  # Unit of charge
 METER = "METER"  # Unit of distance (e.g. wavelength)
 SECOND = "SECOND"  # Unit of time (2nd 1/60th of an hour)
 MINUTE = "MINUTE"  # Unit of time (1/60th of an hour)
@@ -70,7 +69,7 @@ UNIT_SYMBOLS = {
     VOLT: "V",
     AMPERE: "A",
     WATT: "W",
-    COLOUMB: "C",
+    COULOMB: "C",
     METER: "meter",
     SECOND: "sec",
     HOUR: "hour",
@@ -82,10 +81,10 @@ UNIT_SYMBOLS = {
 
 
 COMPONENT_VALUE_MULTIPLES = {
-    "E12": [1.0,  1.2,  1.5,  1.8,  2.2,  2.7,  3.3,  3.9,  4.7,  5.6,  6.8,  8.2],
+    "E12": [1.0, 1.2, 1.5, 1.8, 2.2, 2.7, 3.3, 3.9, 4.7, 5.6, 6.8, 8.2],
 
-    "E24": [1.0,  1.1,  1.2,  1.3,  1.5,  1.6,  1.8,  2.0,  2.2,  2.4,  2.7,  3.0,
-            3.3,  3.6,  3.9,  4.3,  4.7,  5.1,  5.6,  6.2,  6.8,  7.5,  8.2,  9.1],
+    "E24": [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7, 3.0,
+            3.3, 3.6, 3.9, 4.3, 4.7, 5.1, 5.6, 6.2, 6.8, 7.5, 8.2, 9.1],
 
     "E48": [1.00, 1.05, 1.10, 1.15, 1.21, 1.27, 1.33, 1.40, 1.47, 1.54, 1.62, 1.69,
             1.78, 1.87, 1.96, 2.05, 2.15, 2.26, 2.37, 2.49, 2.61, 2.74, 2.87, 3.01,
@@ -127,8 +126,8 @@ BLUE = 6
 VIOLET = 7
 GRAY = 8
 WHITE = 9
-GOLD = 1/10.0
-SILVER = 1/100.0
+GOLD = 1 / 10.0
+SILVER = 1 / 100.0
 
 COLOR_CODES = {
     "black": BLACK,
