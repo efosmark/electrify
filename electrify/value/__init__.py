@@ -2,9 +2,10 @@
 Tools for working with electronic-related values/quantities.
 
 This package is responsible for:
-    * Units (e.g. ohms, farad, henry, etc)
-    * Orders of magnitude (e.g. pico, milli, kilo, etc)
-    * Values parsed from strings (e.g. `"22pF"` --> `Farad(pico=22)`)
+
+ * Units (e.g. ohms, farad, henry, etc)
+ * Orders of magnitude (e.g. pico, milli, kilo, etc)
+ * Values parsed from strings (e.g. `"22pF"` --> `Farad(pico=22)`)
 
 Examples
 --------
@@ -12,14 +13,14 @@ Examples
 
 """
 import math
-from .unit import units, UnitType, ampere, coulomb, farad, henry, hertz, joule, metre, ohm, RadPerSecond, siemens, second, volt, watt, weber
-from .magnitude import Magnitude, magnitudes, get_magnitude, format_magnitude
+from .unit import units, units_by_name, CxUnitType, ampere, coulomb, farad, henry, hertz, joule, metre, ohm, RadPerSecond, siemens, second, volt, watt, weber
+from .magnitude import Prefix, magnitudes, get_magnitude, format_magnitude
 from .. import scanner
 
 [femto, pico, nano, micro, milli, one, kilo, mega, giga, tera, peta] = magnitudes
 
 
-def from_string(string: str) -> UnitType:
+def from_string(string: str) -> CxUnitType:
     """
     Given an input string representing a value, convert it to the appropriate unit & magnitude.
 
@@ -37,7 +38,11 @@ def from_string(string: str) -> UnitType:
 
     Examples
     --------
-    >>> # Not yet provided.
+    >>> v = from_string('121pF')
+    >>> repr(v)
+    'farad(1.21e-10)'
+    >>> str(v)
+    '121pF'
     """
     # TODO: support [value][mag] and [value]
     tlist = scanner.scan(string)
@@ -50,13 +55,15 @@ def from_string(string: str) -> UnitType:
     elif scanner.match(tlist, scanner.ValueMagnitudeUnit):
         value += tlist[0].value
         value = value * tlist[1].magnitude
-        unit_type = tlist[2].unit
+        unit_type = tlist[2].id
 
     if unit_type is None:
         raise ValueError(
-            "Format must be [value][mag][unit] or [value][unit]. Got: '{}'".format(tlist))
-
-    return unit_type(value)
+            "Format must be [value][mag][unit] or [value][unit]. Got: '{}'".format(tlist)
+        )
+    if unit_type in units_by_name:
+        return units_by_name[unit_type](value)
+    raise TypeError('Unknown unit: {}'.format(unit_type))
 
 
 def format_value(x, places=0) -> str:
@@ -84,6 +91,8 @@ def format_value(x, places=0) -> str:
         return str(dict([(str(k), format_value(v, places)) for k, v in x.items()]))
     if x is None:
         return "None"
+    if isinstance(x, CxUnitType):
+        return str(x)
     try:
         if math.isinf(x):
             return "INF"
@@ -94,6 +103,6 @@ def format_value(x, places=0) -> str:
         return str(x)
 
 
-__all__ = ["from_string", "format_value", "format_magnitude", "Magnitude", "magnitudes",
-           "get_magnitude", "UnitType", "units", "ampere", "coulomb", "farad", "henry", "hertz",
+__all__ = ["from_string", "format_value", "format_magnitude", "Prefix", "magnitudes",
+           "get_magnitude", "CxUnitType", "units", "ampere", "coulomb", "farad", "henry", "hertz",
            "joule", "metre", "ohm", "RadPerSecond", "siemens", "second", "volt", "watt", "weber"]

@@ -1,28 +1,17 @@
 """
 Orders of magnitude.
 
-Standard magnitudes are:
-
- * femto
- * pico
- * nano
- * micro
- * milli
- * kilo
- * mega
- * giga
- * tera
- * peta
-
+This module provides the orders of magnitude defined by the SI prefixes as callable objects.
+It also handles formatting of numbers to their most appropriate magnitude.
 """
-from typing import Sequence, SupportsFloat, TypeVar, cast
+from typing import Sequence, SupportsFloat, SupportsComplex, TypeVar, cast
 from .unit import *
 
 # Generic type to ensure magnitude conversions preserve unit type
 _V = TypeVar('_V', bound=SupportsFloat)
 
 
-class Magnitude:
+class Prefix:
     """An order of magnitude."""
 
     prefix: str
@@ -34,7 +23,7 @@ class Magnitude:
         """Create a new order of magnitude with the given prefix, symbol(s), and power."""
         self.prefix = prefix
         self.order = power
-        self.decimal = 1 ** power
+        self.decimal = 10**power
         if isinstance(symbol, str):
             self.symbols = (symbol, )
         else:
@@ -45,28 +34,35 @@ class Magnitude:
         """Get the symbol for the order of magnitude."""
         return self.symbols[0]
 
+    def __repr__(self) -> str:
+        """Get the string representation."""
+        return (f'Prefix(prefix="{self.prefix}", '
+                f'symbol={ [self.symbol] if len(self.symbols) == 1 else self.symbols}, '
+                f'power={self.order})')
+
     def __call__(self, value: _V) -> _V:
         """Treat the input value as if it's at the instance power, and convert it to base."""
-        return cast(_V, float(value) ** self.order)
+        return cast(_V, float(value) / (10**self.order))
 
 
-femto = Magnitude('femto', 'f', -15)
-pico = Magnitude('pico', 'p', -12)
-nano = Magnitude('nano', 'n', -9)
-micro = Magnitude('micro', ('u', 'µ'), -6)
-milli = Magnitude('milli', 'm', -3)
-one = Magnitude('one', '', 1)  # TODO: Should this exist, and if so, is there a better name
-kilo = Magnitude('kilo', 'k', 3)
-mega = Magnitude('mega', 'M', 6)
-giga = Magnitude('giga', 'G', 9)
-tera = Magnitude('tera', 'T', 12)
-peta = Magnitude('peta', 'P', 15)
+# Standard SI prefixes used in electrical systems
+femto = Prefix('femto', 'f', -15)
+pico = Prefix('pico', 'p', -12)
+nano = Prefix('nano', 'n', -9)
+micro = Prefix('micro', ('µ', 'u'), -6)
+milli = Prefix('milli', 'm', -3)
+one = Prefix('one', '', 1)
+kilo = Prefix('kilo', 'k', 3)
+mega = Prefix('mega', 'M', 6)
+giga = Prefix('giga', 'G', 9)
+tera = Prefix('tera', 'T', 12)
+peta = Prefix('peta', 'P', 15)
 
 
 magnitudes = [femto, pico, nano, micro, milli, one, kilo, mega, giga, tera, peta]
 
 
-def get_magnitude(x: SupportsFloat) -> Magnitude:
+def get_magnitude(x: float) -> Prefix:
     """
     Given an input value, get the magnitude that would convert it into a standard size.
 
@@ -81,37 +77,73 @@ def get_magnitude(x: SupportsFloat) -> Magnitude:
     Examples
     --------
     >>> get_magnitude(0.000000123)
+    Prefix(prefix="nano", symbol=['n'], power=-9)
 
     >>> get_magnitude(999000)
+    Prefix(prefix="kilo", symbol=['k'], power=3)
 
+    >>> get_magnitude(-2.2e-14)
+    Prefix(prefix="femto", symbol=['f'], power=-15)
     """
-    x = float(x)
+    x = abs(x)
     for n1, n2 in zip(magnitudes, magnitudes[1:]):
-        if n1.decimal < x < n2.decimal:
+        if n1.decimal <= x < n2.decimal:
             return n1
     return one
 
 
-def format_magnitude(x: SupportsFloat, places: int = 2, sep: str = '') -> str:
-    """
-    Format a number with the standard array of magnitudes and their symbols.
-
-    Parameters
-    ----------
-     * `x: float` — Numeric value
-     * `places: int = 2` — Maximum number of decimal places to show
-
-    Returns
-    -------
-     * `str` — _description_
-
-    Examples
-    --------
-    >>> # None yet provided
-
-    """
+def _fmt(x, places, sep, unit_symbol, isimag=False):
     mag = get_magnitude(x)
     value = f'{mag(x):.{places}f}'.rstrip('0').rstrip('.')
     if value == '-0':
         value = '0'
-    return f'{value}{sep}{mag.symbol}'
+    if isimag:
+        return f'[{value}j]{sep}{mag.symbol}{unit_symbol}'
+    return f'{value}{sep}{mag.symbol}{unit_symbol}'
+
+
+def format_magnitude(x: float | complex, places: int = 2, sep: str = '', unit_symbol='') -> str:
+    """
+    Format a number with the standard array of magnitudes and their symbols.
+
+    Args:
+        x (float | complex): Numeric value
+        places (int, optional): Maximum number of decimal places to show. Defaults to 2.
+        sep (str, optional): Separation between value and prefix. Defaults to ''.
+        unit_symbol (str, optional): If a specific unit is being formatted, its symbol can be 
+                                     applied directly. Defaults to ''.
+
+    Returns:
+        str: Formatted numeric value with magnitude prefixes applied.
+
+    Examples:
+        >>> format_magnitude(999000)
+        '999k'
+
+        >>> format_magnitude(complex(1.87e6, -22e-10))
+        '1.87M - [2.2j]n'
+
+        >>> format_magnitude(complex(4.7e3, -22e-10), unit_symbol="Ω")
+        '4.7kΩ - [2.2j]nΩ'
+
+        >>> format_magnitude(6.8e-6, unit_symbol="F")
+        '6.8µF'
+
+        >>> value = 798531
+        >>> format_magnitude(value, places=0)
+        '799k'
+        >>> format_magnitude(value, places=1)
+        '798.5k'
+        >>> format_magnitude(value, places=2)
+        '798.53k'
+        >>> format_magnitude(value, places=3)
+        '798.531k'
+    """
+    if isinstance(x, complex) and x.imag != 0:
+        real = _fmt(x.real, places, sep, unit_symbol)
+        imag = _fmt(abs(x.imag), places, sep, unit_symbol, isimag=True)
+        sign = "-" if x.imag < 0 else "+"
+        return f'{real} {sign} {imag}'
+    if isinstance(x, complex):
+        x = x.real
+    return _fmt(x, places, sep, unit_symbol)
