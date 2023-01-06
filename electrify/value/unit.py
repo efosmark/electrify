@@ -8,15 +8,15 @@ Custom types to represent the various units of measure used in the project.
 
 >>> voltage = volt(0.500)
 >>> repr(voltage)
-"volt(0.5)"
+'volt(0.5)'
 >>> str(voltage)
-"500mV"
+'500 mV'
 
 >>> resistance = ohm(2000)
 >>> repr(resistance)
-"ohm(2000.0)"
+'ohm(2000.0)'
 >>> str(resistance)
-"2kΩ"
+'2 kΩ'
 
  .. rubric:: Automatic type conversion
 
@@ -30,9 +30,9 @@ Here, we see a type conversion from ``(volt / ohm = ampere)``
     >>> resistance = ohm(2000)
     >>> current = voltage / resistance
     >>> repr(current)
-    "ampere(0.00025)"
+    'ampere(0.00025)'
     >>> str(current)
-    "250µA"
+    '250 µA'
 
     >>> volt(volt(2000) + 600)
     volt(2600.0)
@@ -40,8 +40,9 @@ Here, we see a type conversion from ``(volt / ohm = ampere)``
 """
 import cmath
 from functools import cache
-from typing import ClassVar, overload
-from . import prefix
+from typing import ClassVar, Optional, SupportsComplex, SupportsFloat, SupportsIndex, overload
+from typing_extensions import Self
+from .prefix import Prefix, format_prefix
 
 
 class base_unit(complex):
@@ -49,13 +50,30 @@ class base_unit(complex):
 
     symbol: ClassVar[str] = ""
 
+    def __new__(
+        cls: type[Self],
+        value: Optional[complex | SupportsComplex | SupportsFloat | SupportsIndex] = ...,
+        **kwargs,
+    ) -> Self:
+        if value is None and len(kwargs) > 0:
+            for k, v in kwargs.items():
+                if k in Prefix.by_name:
+                    value = Prefix.by_name[k](v)
+                    break
+                elif k in Prefix.by_symbol:
+                    value = Prefix.by_symbol[k](v)
+                    break
+        if value is None:
+            raise ValueError("Either a direct value or a prefixed value must be supplied.")
+        return super().__new__(cls, value)
+
     def __str__(self) -> str:
         """Get the str representation of the unit."""
         return self.format()
 
     def format(self) -> str:
         """Get the formatted version of the unit."""
-        return prefix.format_magnitude(self, places=2, sep=" ", unit_symbol=self.symbol)
+        return format_prefix(self, places=2, sep=" ", unit_symbol=self.symbol)
 
     @property
     def magnitude(self):

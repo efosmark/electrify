@@ -11,13 +11,13 @@ This package is responsible for:
 import math
 
 from .unit import units, units_by_name, base_unit
-from .prefix import Prefix, magnitudes, get_magnitude, format_magnitude
+from .prefix import Prefix, all_prefixes, get_appropriate_prefix, format_prefix
 from . import scanner
 
 [ampere, coulomb, farad, henry, hertz, joule,
  metre, ohm, siemens, second, volt, watt, weber] = units
 
-[femto, pico, nano, micro, milli, one, kilo, mega, giga, tera, peta] = magnitudes
+[femto, pico, nano, micro, milli, one, kilo, mega, giga, tera, peta] = all_prefixes
 
 
 def from_string(string: str) -> base_unit | float | complex:
@@ -41,7 +41,7 @@ def from_string(string: str) -> base_unit | float | complex:
         >>> repr(v)
         'farad(1.21e-10)'
         >>> str(v)
-        '121pF'
+        '121 pF'
         >>> type(v)
         <class 'electrify.value.unit.farad'>
 
@@ -130,12 +130,12 @@ def format_value(x, places=0) -> str:
             return "INF"
         if math.isnan(x):
             return "NaN"
-        return format_magnitude(x, places)
+        return format_prefix(x, places)
     except TypeError:
         return str(x)
 
 
 __all__ = ["base_unit", "from_string", "format_value",
-           "format_magnitude", "Prefix", "magnitudes", "get_magnitude", "units", "ampere",
+           "format_prefix", "Prefix", "all_prefixes", "get_appropriate_prefix", "units", "ampere",
            "coulomb", "farad", "henry", "hertz", "joule", "metre", "ohm", "siemens", "second",
            "volt", "watt", "weber"]
