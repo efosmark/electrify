@@ -7,7 +7,7 @@ class LexicalToken:
     pass
 
 
-class Operator(LexicalToken):
+class OperatorToken(LexicalToken):
     """
     Lexical token for operators.
 
@@ -27,8 +27,12 @@ class Operator(LexicalToken):
         """Initialize a new `Operator` token with the `id` equal to the op input."""
         self.id = op
 
+    def __repr__(self) -> str:
+        """Get the string representation of the token."""
+        return f'Operator(\'{self.id}\')'
 
-class Number(LexicalToken):
+
+class NumberToken(LexicalToken):
     """Lexical token for numeric values."""
 
     number: str
@@ -39,8 +43,12 @@ class Number(LexicalToken):
         self.number = value
         self.value = float(value)
 
+    def __repr__(self) -> str:
+        """Get the string representation of the token."""
+        return f'Number({self.number})'
 
-class Keyword(LexicalToken):
+
+class KeywordToken(LexicalToken):
     """
     Lexical token for keywords.
 
@@ -61,8 +69,12 @@ class Keyword(LexicalToken):
         """Create a new `Keyword` token with the given keyword string."""
         self.id = kw
 
+    def __repr__(self) -> str:
+        """Get the string representation of the token."""
+        return f'Keyword({self.id})'
 
-class Magnitude(LexicalToken):
+
+class MagnitudeToken(LexicalToken):
     """
     Lexical token for magnitudes.
 
@@ -77,8 +89,12 @@ class Magnitude(LexicalToken):
         self.id = magname
         self.magnitude = magnitude
 
+    def __repr__(self) -> str:
+        """Get the string representation of the token."""
+        return f'Magnitude(\'{self.id}\', {self.magnitude})'
 
-class Unit(LexicalToken):
+
+class UnitToken(LexicalToken):
     """
     Lexical token for units / data-types.
 
@@ -90,3 +106,7 @@ class Unit(LexicalToken):
     def __init__(self, unit: str):
         """Create a new `Unit` token with the given unit string value."""
         self.id = unit
+
+    def __repr__(self) -> str:
+        """Get the string representation of the token."""
+        return f'Unit(\'{self.id}\')'

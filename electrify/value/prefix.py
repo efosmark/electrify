@@ -51,7 +51,7 @@ pico = Prefix('pico', 'p', -12)
 nano = Prefix('nano', 'n', -9)
 micro = Prefix('micro', ('µ', 'u'), -6)
 milli = Prefix('milli', 'm', -3)
-one = Prefix('one', '', 1)
+one = Prefix('one', '', 0)
 kilo = Prefix('kilo', 'k', 3)
 mega = Prefix('mega', 'M', 6)
 giga = Prefix('giga', 'G', 9)
@@ -66,24 +66,21 @@ def get_magnitude(x: float) -> Prefix:
     """
     Given an input value, get the magnitude that would convert it into a standard size.
 
-    Parameters
-    ----------
-     * `x: SupportsFloat` — The input value
+    Args:
+        x (float): The input value
 
-    Returns
-    -------
-     * `Magnitude` -- Object describing the appropriate magnitude
+    Returns:
+        Prefix: Object describing the appropriate magnitude
 
-    Examples
-    --------
-    >>> get_magnitude(0.000000123)
-    Prefix(prefix="nano", symbol=['n'], power=-9)
+    Examples:
+        >>> get_magnitude(0.000000123)
+        Prefix(prefix="nano", symbol=['n'], power=-9)
 
-    >>> get_magnitude(999000)
-    Prefix(prefix="kilo", symbol=['k'], power=3)
+        >>> get_magnitude(999000)
+        Prefix(prefix="kilo", symbol=['k'], power=3)
 
-    >>> get_magnitude(-2.2e-14)
-    Prefix(prefix="femto", symbol=['f'], power=-15)
+        >>> get_magnitude(-2.2e-14)
+        Prefix(prefix="femto", symbol=['f'], power=-15)
     """
     x = abs(x)
     for n1, n2 in zip(magnitudes, magnitudes[1:]):

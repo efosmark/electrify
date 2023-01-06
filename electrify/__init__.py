@@ -1,4 +1,5 @@
-from .value import *
-from .constants import *
-from .math.common import *
-from . import circuit, math, plot, util
+#from .quantity import cap, ind
+#from .value.value import *
+from . import value, quantity  # , element  # circuit, derived, util, value
+
+__version__ = (0, 0, 1)

@@ -6,8 +6,9 @@ Examples
 >>> # Not yet provided.
 
 """
+import logging
 from typing import Generator
-from ..constants import VALUE_TYPES, UNIT_SYMBOLS
+from electrify.constants import VALUE_TYPES, UNIT_SYMBOLS
 from . import tokens
 
 DIGITS = "0123456789"
@@ -43,6 +44,9 @@ class Lexer:
         self._value.reverse()
         self._result = []
         self._last = ""
+
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
 
     def pop(self) -> str:
         """
@@ -125,13 +129,11 @@ class Lexer:
         """
         Scan the character buffer and yield tokens as their found.
 
-        Raises
-        ------
-         * `ScanningError` — Raised if an unknown character is discovered
+        Raises:
+            ScanningError: Raised if an unknown character is discovered
 
-        Yields
-        ------
-         * `LexicalToken` -- Each token is yielded as they're found
+        Yields:
+            Generator: Each token is yielded as they're found
         """
         while self.has_chars():
             c = self.pop()
@@ -145,6 +147,7 @@ class Lexer:
             if self._is_digit(c, self.last(), self.peek()):
                 for token in self._handle_digit(c):
                     token_found = True
+                    self.logger.debug(f'Number: {token}')
                     yield token
                 if token_found:
                     continue
@@ -153,6 +156,7 @@ class Lexer:
             if c.isalpha():
                 for token in self._handle_string(c):
                     token_found = True
+                    self.logger.debug(f'String data token found: {token}')
                     yield token
                 if token_found:
                     continue
@@ -161,6 +165,7 @@ class Lexer:
             if c in OPERAND_PARTS:
                 for token in self._handle_operand(c):
                     token_found = True
+                    self.logger.debug(f'Operand token found: {token}')
                     yield token
                 if token_found:
                     continue
@@ -184,9 +189,10 @@ class Lexer:
                 self.push(char)
                 break
             if not self.has_chars():
+                buffer += char
                 break
             buffer += char
-        yield tokens.Number(buffer)
+        yield tokens.NumberToken(buffer)
 
     def _handle_operand(self, char: str) -> Generator:
         """Build a `tokens.Operator` token based on scanned-in characters."""
@@ -194,17 +200,17 @@ class Lexer:
         if char == '|':
             if self.peek() == '|':
                 buffer += self.pop()
-                yield tokens.Operator(OP_PARALLEL)
+                yield tokens.OperatorToken(OP_PARALLEL)
             else:
                 yield False
         elif char == '+':
-            yield tokens.Operator(OP_SERIES)
+            yield tokens.OperatorToken(OP_SERIES)
         elif char == '@':
-            yield tokens.Keyword(KW_AT)
+            yield tokens.KeywordToken(KW_AT)
         elif char == '(':
-            yield tokens.Operator(OP_LPAREN)
+            yield tokens.OperatorToken(OP_LPAREN)
         elif char == ')':
-            yield tokens.Operator(OP_RPAREN)
+            yield tokens.OperatorToken(OP_RPAREN)
 
     def _handle_string(self, string: str) -> Generator:
         """Build `tokens.Keyword`, `tokens.Magnitude`, or `tokens.Unit` based on scanned input."""
@@ -216,7 +222,7 @@ class Lexer:
 
         # Check keywords
         if buffer.upper() in KEYWORDS:
-            yield tokens.Keyword(buffer.upper())
+            yield tokens.KeywordToken(buffer.upper())
 
         # Check value types (e.g. pico, nano, etc)
         type_found = None
@@ -228,14 +234,14 @@ class Lexer:
                         type_found = t
                         magnitude = (types[0], exp)
         if type_found and magnitude is not None:
-            yield tokens.Magnitude(*magnitude)
+            yield tokens.MagnitudeToken(*magnitude)
             buffer = buffer[len(type_found):]
 
         # Check unit symbols (e.g. V, F, H)
         for name, symbol in UNIT_SYMBOLS.items():
             unit_str = buffer.upper()
             if unit_str in (name, symbol) or (unit_str.endswith('S') and unit_str[:-1] == name):
-                yield tokens.Unit(name)
+                yield tokens.UnitToken(name)
                 buffer = ""
 
         if len(buffer) > 0:
