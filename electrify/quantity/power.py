@@ -1,3 +1,4 @@
+from typing import overload
 from ..value.unit import *
 from .quantity import Quantity
 
@@ -26,3 +27,18 @@ def P_from_RV(R: ohm, V: volt) -> watt:
 def P_from_tE(t: second, E: joule) -> watt:
     """Get power in watts from time in seconds and energy in joules."""
     return watt(joule(E) / second(t))
+
+
+@overload
+def get_power(*, I: ampere, V: volt) -> watt: ...
+@overload
+def get_power(*, I: ampere, R: ohm) -> watt: ...
+@overload
+def get_power(*, R: ohm, V: volt) -> watt: ...
+@overload
+def get_power(*, t: second, E: joule) -> watt: ...
+
+
+def get_power(**kwargs: base_unit | complex | float) -> watt:
+    """Calculate the power in watts based on the quantities supplied."""
+    return P.get(**kwargs)

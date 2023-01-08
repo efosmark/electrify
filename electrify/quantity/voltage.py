@@ -1,7 +1,9 @@
+from typing import overload
 from ..value.unit import *
 from .quantity import Quantity
 
 V = voltage = Quantity[volt]("V", "voltage")
+
 
 @V.solution
 def from_IR(I: ampere, R: ohm) -> volt:
@@ -25,6 +27,21 @@ def from_EQ(E: joule, Q: coulomb) -> volt:
 def from_IP(I: ampere, P: watt) -> volt:
     """Get voltage in volts from current in amperes and power in watts."""
     return volt(watt(P) / ampere(I))
+
+
+@overload
+def get_voltage(*, I: ampere, R: ohm) -> volt: ...
+@overload
+def get_voltage(*, C: farad, Q: coulomb) -> volt: ...
+@overload
+def get_voltage(*, E: joule, Q: coulomb) -> volt: ...
+@overload
+def get_voltage(*, I: ampere, P: watt) -> volt: ...
+
+
+def get_voltage(**kwargs: base_unit | complex | float) -> volt:
+    """Calculate the voltage in volts based on the quantities supplied."""
+    return V.get(**kwargs)
 
 
 # @V.register_solver

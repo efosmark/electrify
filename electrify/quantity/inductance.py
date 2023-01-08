@@ -15,7 +15,7 @@ def from_tR(t: second, R: ohm) -> henry:
 
 @L.solution
 def from_fX(f: hertz, X: ohm) -> henry:
-    """Get capacitance in farads from frequency in ohms and reactance in ohms."""
+    """Get capacitance in farads from frequency in ohms and inductance in ohms."""
     f, X = hertz(f), ohm(X)
     return henry(2.0 * cmath.pi * hertz(f) * ohm(X))
 
@@ -35,7 +35,7 @@ def from_IE(I: ampere, E: joule) -> henry:
 @L.solution
 def at_resonance(f: hertz, C: farad) -> henry:
     """
-    Get the inductance in Henrys (H) from a known resonant circuit.
+    Get the inductance in henrys from a known resonant circuit.
 
     Args:
         f (hertz): Resonance frequency measured in hertz.
@@ -47,7 +47,21 @@ def at_resonance(f: hertz, C: farad) -> henry:
     return henry(1 / ((4.0 * cmath.pi**2) * hertz(f) * farad(C)))
 
 
-from_fC = at_resonance
+@overload
+def get_inductance(*, t: second, R: ohm) -> henry: ...
+@overload
+def get_inductance(*, f: hertz, X: ohm) -> henry: ...
+@overload
+def get_inductance(*, I: ampere, U: weber) -> henry: ...
+@overload
+def get_inductance(*, I: ampere, E: joule) -> henry: ...
+@overload
+def get_inductance(*, f: hertz, C: farad) -> henry: ...
+
+
+def get_inductance(**kwargs: base_unit | complex | float) -> henry:
+    """Calculate the inductance in ohms based on the quantities supplied."""
+    return L.get(**kwargs)
 
 
 @overload
@@ -77,7 +91,8 @@ def from_toroid(
     effective_core_length - Effective length of the core in cm
     """
     if cross_section_core_area and effective_core_length:
-        return henry((0.4 * cmath.pi * num_turns**2 * permeability_or_index * cross_section_core_area * 10e-2) / effective_core_length)
+        return henry((0.4 * cmath.pi * num_turns ** 2 * permeability_or_index *
+                      cross_section_core_area * 10e-2) / effective_core_length)
     return henry(num_turns**2 * permeability_or_index)
 
 

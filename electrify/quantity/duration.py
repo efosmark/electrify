@@ -1,3 +1,4 @@
+from typing import overload
 from ..value.unit import *
 from .quantity import Quantity
 
@@ -32,6 +33,23 @@ def t_from_IQ(I: ampere, Q: coulomb) -> second:
 def t_from_UV(U: weber, V: volt) -> second:
     """Get time in seconds from magnetic flux in webers and voltage in volts."""
     return second(weber(U) / volt(V))
+
+
+@overload
+def get_duration(*, f: hertz) -> second: ...
+@overload
+def get_duration(*, C: farad, R: ohm) -> second: ...
+@overload
+def get_duration(*, L: henry, R: ohm) -> second: ...
+@overload
+def get_duration(*, I: ampere, Q: coulomb) -> second: ...
+@overload
+def get_duration(*, U: weber, V: volt) -> second: ...
+
+
+def get_duration(**kwargs: base_unit | complex | float) -> second:
+    """Calculate the duration in seconds based on the quantities supplied."""
+    return t.get(**kwargs)
 
 
 # @t.register_solver

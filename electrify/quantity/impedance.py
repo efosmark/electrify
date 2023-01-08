@@ -1,4 +1,5 @@
 import cmath
+from typing import overload
 from ..value.unit import *
 from .quantity import Quantity
 
@@ -36,3 +37,18 @@ def Z_from_Y(Y: siemens) -> ohm:
 def Y_from_Z(Z: ohm) -> siemens:
     """Get admittance in siemens from impedance in ohms."""
     return siemens(1.0 / ohm(Z))
+
+
+@overload
+def get_impedance(*, R: ohm, X: ohm) -> ohm: ...
+@overload
+def get_impedance(*, R: ohm, phase: float) -> ohm: ...
+@overload
+def get_impedance(*, X: ohm, phase: float) -> ohm: ...
+@overload
+def get_impedance(*, Y: siemens) -> ohm: ...
+
+
+def get_impedance(**kwargs: base_unit | complex | float) -> ohm:
+    """Calculate the impedance in ohms based on the quantities supplied."""
+    return Z.get(**kwargs)

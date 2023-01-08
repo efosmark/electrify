@@ -7,6 +7,7 @@ Examples
 
 """
 import cmath
+from typing import overload
 from ..value.unit import *
 from .quantity import Quantity
 from ..constants import OPEN_CIRCUIT
@@ -31,6 +32,10 @@ def from_tR(t: second, R: ohm) -> farad:
 @C.solution
 def from_fX(f: hertz, X: ohm) -> farad:
     """Get capacitance in farads from frequency in ohms and capacitive reactance in ohms."""
+    if f <= 0:
+        raise ValueError('Frequency must be a positive number. Received: "{}"'.format(f))
+    elif X == 0:
+        return farad(0)
     return farad(1.0 / (2.0 * cmath.pi * hertz(f) * abs(ohm(X))))
 
 
@@ -46,73 +51,18 @@ def from_EV(E: joule, V: volt) -> farad:
     return farad(joule(E) / volt(V)**2.0)
 
 
-def capacitive_reactance(freq: hertz | float, cap: farad | float) -> ohm:
-    """
-    Provide the reactance d (X) in ohms (Ω) at a given frequency for a given capacitance.
-
-    Capacitive reactance, by definition, will always be a negative number.
-
-    Parameters
-    ----------
-    * `freq`:`Hz` — Frequency in Hertz (Hz)
-    * `cap`:`F` — Capacitance in Farads (F)
-
-    Raises
-    ------
-    * `ValueError` — Raised when a negative frequency is supplied.
-
-    Returns
-    -------
-    * `Ohm` — The reactance (X) in ohms (Ω) at a given frequency for a given capacitance
-
-    Examples
-    --------
-    >>> # Not yet provided.
-
-    References
-    ----------
-    None.
-    """
-    if freq < 0:
-        raise ValueError('Frequency must be a positive number. Received: "{}"'.format(freq))
-    if freq == 0:
-        return ohm(-OPEN_CIRCUIT)
-    if cap == 0:
-        return ohm(0)
-    return ohm(-1.0 / (2.0 * cmath.pi * freq * cap))
+@overload
+def get_capacitance(*, Q: coulomb, V: volt) -> farad: ...
+@overload
+def get_capacitance(*, t: second, R: ohm) -> farad: ...
+@overload
+def get_capacitance(*, f: hertz, X: ohm) -> farad: ...
+@overload
+def get_capacitance(*, E: joule, Q: coulomb) -> farad: ...
+@overload
+def get_capacitance(*, E: joule, V: volt) -> farad: ...
 
 
-def capacitance_from_reactance(freq: hertz, reactance: ohm | float) -> farad:
-    """
-    Given a frequency (Hz) and reactance (X), provide the capacitance in Farads (F).
-
-    Parameters
-    ----------
-     * `freq`:`Hz` — Frequency in Hertz (Hz)
-     * `reactance`:`X` — Capacitive reactance in ohms (Ω)
-
-    Notes
-    -----
-    This behaves the same whether or not this value is negative.
-
-    Raises
-    ------
-     * `ValueError` — Raised when a negative frequency is supplied
-
-    Returns
-    -------
-     * `F` — Capacitance in Farads (F)
-
-    Examples
-    --------
-    >>> # Not yet provided.
-
-    References
-    ----------
-    None.
-    """
-    if freq <= 0:
-        raise ValueError('Frequency must be a positive number. Received: "{}"'.format(freq))
-    if reactance == 0:
-        return farad(0)
-    return farad(abs(1 / (2 * cmath.pi * freq * abs(reactance))))
+def get_capacitance(**kwargs: base_unit | complex | float) -> farad:
+    """Calculate the capacitance in ohms based on the quantities supplied."""
+    return C.get(**kwargs)
