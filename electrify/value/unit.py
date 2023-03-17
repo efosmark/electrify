@@ -50,22 +50,22 @@ class base_unit(complex):
 
     symbol: ClassVar[str] = ""
 
-    def __new__(
-        cls: type[Self],
-        value: Optional[complex | SupportsComplex | SupportsFloat | SupportsIndex] = ...,
-        **kwargs,
-    ) -> Self:
-        if value is None and len(kwargs) > 0:
-            for k, v in kwargs.items():
-                if k in Prefix.by_name:
-                    value = Prefix.by_name[k](v)
-                    break
-                elif k in Prefix.by_symbol:
-                    value = Prefix.by_symbol[k](v)
-                    break
-        if value is None:
-            raise ValueError("Either a direct value or a prefixed value must be supplied.")
-        return super().__new__(cls, value)
+    # def __new__(
+    #     cls,
+    #     value: Optional[complex | SupportsComplex | SupportsFloat | SupportsIndex] = None,
+    #     **kwargs,
+    # ):
+    #     if value is None and len(kwargs) > 0:
+    #         for k, v in kwargs.items():
+    #             if k in Prefix.by_name:
+    #                 value = Prefix.by_name[k](v)
+    #                 break
+    #             elif k in Prefix.by_symbol:
+    #                 value = Prefix.by_symbol[k](v)
+    #                 break
+    #     if value is None:
+    #         raise ValueError("Either a direct value or a prefixed value must be supplied.")
+    #     return super().__new__(cls, value)
 
     def __str__(self) -> str:
         """Get the str representation of the unit."""
@@ -77,10 +77,12 @@ class base_unit(complex):
 
     @property
     def magnitude(self):
+        """Get the polar magnitude of the value."""
         return self.polar()[0]
 
     @property
     def phase_angle(self):
+        """Get the polar phase-angle of the value."""
         return self.polar()[1]
 
     @cache
@@ -97,7 +99,7 @@ class base_unit(complex):
         if input_type in type_map:
             return type_map[input_type](input_value)
         elif input_type == type(self) or input_type in (complex, float, int):
-            return self.__class__(input_type)
+            return self.__class__(input_value)
         return base_unit(input_value)
 
     def _type_convert_mul(self, __x, type_map):
@@ -106,14 +108,20 @@ class base_unit(complex):
         if input_type in type_map:
             return type_map[input_type](input_value)
         elif input_type == type(self) or input_type in (complex, float, int):
-            return self.__class__(input_type)
+            return self.__class__(input_value)
         return base_unit(input_value)
+
+    def __pow__(self, __x):
+        return self.__class__(super().__pow__(__x))
 
     def __repr__(self):
         """Get the repr value of the unit."""
         if not self.imag:
             return f"{self.__class__.__name__}({self.real})"
         return f"{self.__class__.__name__}({self})"
+
+
+_number = base_unit | complex | float | int
 
 
 class ampere(base_unit):
@@ -125,6 +133,8 @@ class ampere(base_unit):
     def __truediv__(self, __x: "siemens") -> "volt": ...
     @overload
     def __truediv__(self, __x: "volt") -> "siemens": ...
+    @overload
+    def __truediv__(self, __x: _number): ...
 
     def __truediv__(self, __x):
         return self._type_convert_div(__x, {
@@ -133,7 +143,7 @@ class ampere(base_unit):
         })
 
     @overload
-    def __mul__(self, __x: "henry") -> "weber": ...
+    def __mul__(self, __x: "henry", /) -> "weber": ...
     @overload
     def __mul__(self, __x: "ohm") -> "volt": ...
     @overload
@@ -142,6 +152,8 @@ class ampere(base_unit):
     def __mul__(self, __x: "weber") -> "ampere": ...
     @overload
     def __mul__(self, __x: "second") -> "coulomb": ...
+    @overload
+    def __mul__(self, __x: _number): ...
 
     def __mul__(self, __x) -> complex:
         return self._type_convert_mul(__x, {
@@ -166,6 +178,8 @@ class coulomb(base_unit):
     def __truediv__(self, __x: "volt") -> "farad": ...
     @overload
     def __truediv__(self, __x: "second") -> "ampere": ...
+    @overload
+    def __truediv__(self, __x: _number): ...
 
     def __truediv__(self, __x):
         return self._type_convert_div(__x, {
@@ -179,6 +193,8 @@ class coulomb(base_unit):
     def __mul__(self, __x: "ohm") -> "weber": ...
     @overload
     def __mul__(self, __x: "volt") -> "joule": ...
+    @overload
+    def __mul__(self, __x: _number): ...
 
     def __mul__(self, __x) -> complex:
         return self._type_convert_mul(__x, {
@@ -196,6 +212,8 @@ class farad(base_unit):
     def __truediv__(self, __x: "siemens") -> "second": ...
     @overload
     def __truediv__(self, __x: "second") -> "siemens": ...
+    @overload
+    def __truediv__(self, __x: _number): ...
 
     def __truediv__(self, __x):
         return self._type_convert_div(__x, {
@@ -209,6 +227,8 @@ class farad(base_unit):
     def __mul__(self, __x: "ohm") -> "second": ...
     @overload
     def __mul__(self, __x: "volt") -> "coulomb": ...
+    @overload
+    def __mul__(self, __x: _number): ...
 
     def __mul__(self, __x) -> complex:
         return self._type_convert_mul(__x, {
@@ -227,6 +247,8 @@ class henry(base_unit):
     def __truediv__(self, __x: "ohm") -> "second": ...
     @overload
     def __truediv__(self, __x: "second") -> "ohm": ...
+    @overload
+    def __truediv__(self, __x: _number): ...
 
     def __truediv__(self, __x):
         return self._type_convert_div(__x, {
@@ -240,6 +262,8 @@ class henry(base_unit):
     def __mul__(self, __x: "hertz") -> "ohm": ...
     @overload
     def __mul__(self, __x: "siemens") -> "second": ...
+    @overload
+    def __mul__(self, __x: _number): ...
 
     def __mul__(self, __x) -> complex:
         return self._type_convert_mul(__x, {
@@ -272,6 +296,8 @@ class joule(base_unit):
     def __truediv__(self, __x: "watt") -> "second": ...
     @overload
     def __truediv__(self, __x: "second") -> "watt": ...
+    @overload
+    def __truediv__(self, __x: _number): ...
 
     def __truediv__(self, __x):
         return self._type_convert_div(__x, {
@@ -286,6 +312,7 @@ class joule(base_unit):
 
 class metre(base_unit):
     r"""
+
     Primary unit of length.
 
     .. rubric:: SI Definition [SI_2.3.1]_
@@ -305,6 +332,8 @@ class ohm(base_unit):
     def __truediv__(self, __x: "henry") -> "hertz": ...
     @overload
     def __truediv__(self, __x: "hertz") -> "henry": ...
+    @overload
+    def __truediv__(self, __x: _number): ...
 
     def __truediv__(self, __x):
         return self._type_convert_div(__x, {
@@ -320,6 +349,8 @@ class ohm(base_unit):
     def __mul__(self, __x: "farad") -> "second": ...
     @overload
     def __mul__(self, __x: "second") -> "henry": ...
+    @overload
+    def __mul__(self, __x: _number): ...
 
     def __mul__(self, __x) -> complex:
         return self._type_convert_mul(__x, {
@@ -328,6 +359,12 @@ class ohm(base_unit):
             farad: second,
             second: henry
         })
+
+
+class radian(base_unit):
+    """Unit of angle."""
+
+    symbol = "rad"
 
 
 class RadPerSecond(base_unit):
@@ -351,6 +388,8 @@ class second(base_unit):
     def __mul__(self, __x: "volt") -> "weber": ...
     @overload
     def __mul__(self, __x: "watt") -> "joule": ...
+    @overload
+    def __mul__(self, __x: _number): ...
 
     def __mul__(self, __x) -> complex:
         return self._type_convert_mul(__x, {
@@ -369,6 +408,8 @@ class second(base_unit):
     def __truediv__(self, __x: "ohm") -> "siemens": ...
     @overload
     def __truediv__(self, __x: "siemens") -> "henry": ...
+    @overload
+    def __truediv__(self, __x: _number): ...
 
     def __truediv__(self, __x):
         return self._type_convert_div(__x, {
@@ -388,6 +429,8 @@ class siemens(base_unit):
     def __truediv__(self, __x: "farad") -> "hertz": ...
     @overload
     def __truediv__(self, __x: "hertz") -> "farad": ...
+    @overload
+    def __truediv__(self, __x: _number): ...
 
     def __truediv__(self, __x):
         return self._type_convert_div(__x, {
@@ -401,6 +444,8 @@ class siemens(base_unit):
     def __mul__(self, __x: "volt") -> "ampere": ...
     @overload
     def __mul__(self, __x: "second") -> "farad": ...
+    @overload
+    def __mul__(self, __x: _number): ...
 
     def __mul__(self, __x) -> complex:
         return self._type_convert_mul(__x, {
@@ -419,6 +464,8 @@ class volt(base_unit):
     def __truediv__(self, __x: "ohm") -> "ampere": ...
     @overload
     def __truediv__(self, __x: "ampere") -> "ohm": ...
+    @overload
+    def __truediv__(self, __x: _number): ...
 
     def __truediv__(self, __x):
         return self._type_convert_div(__x, {
@@ -436,6 +483,8 @@ class volt(base_unit):
     def __mul__(self, __x: "siemens") -> "ampere": ...
     @overload
     def __mul__(self, __x: "second") -> "weber": ...
+    @overload
+    def __mul__(self, __x: _number): ...
 
     def __mul__(self, __x) -> complex:
         return self._type_convert_mul(__x, {
@@ -456,6 +505,8 @@ class watt(base_unit):
     def __truediv__(self, __x: "ampere") -> "volt": ...
     @overload
     def __truediv__(self, __x: "volt") -> "ampere": ...
+    @overload
+    def __truediv__(self, __x: _number): ...
 
     def __truediv__(self, __x):
         return self._type_convert_div(__x, {
@@ -466,7 +517,7 @@ class watt(base_unit):
     @overload
     def __mul__(self, __x: "second") -> "joule": ...
     @overload
-    def __mul__(self, __x: complex) -> complex: ...
+    def __mul__(self, __x: _number): ...
 
     def __mul__(self, __x) -> complex:
         return self._type_convert_mul(__x, {
@@ -491,6 +542,8 @@ class weber(base_unit):
     def __truediv__(self, __x: "volt") -> "second": ...
     @overload
     def __truediv__(self, __x: "second") -> "volt": ...
+    @overload
+    def __truediv__(self, __x: _number): ...
 
     def __truediv__(self, __x):
         return self._type_convert_div(__x, {
@@ -505,7 +558,7 @@ class weber(base_unit):
     @overload
     def __mul__(self, __x: "ampere") -> "joule": ...
     @overload
-    def __mul__(self, __x: complex) -> complex: ...
+    def __mul__(self, __x: _number): ...
 
     def __mul__(self, __x) -> complex:
         return self._type_convert_mul(__x, {
@@ -513,8 +566,8 @@ class weber(base_unit):
         })
 
 
-units = [ampere, coulomb, farad, henry, hertz, joule,
-         metre, ohm, siemens, second, volt, watt, weber]
+units: list[type] = [ampere, coulomb, farad, henry, hertz, joule,
+                     metre, ohm, siemens, second, volt, watt, weber]
 
 units_by_name = {
     "ampere": ampere,
