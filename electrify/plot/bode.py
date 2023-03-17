@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib.ticker import EngFormatter, NullFormatter, FixedLocator
 
-from ..value import format_value
+from ..scanner import format_value
 
 default_settings = {
     "show_grid": True,

@@ -1,8 +1,8 @@
 import networkx as nx
 import matplotlib.pyplot as plt
-from ..value import format_value
-from ..component import Inductor, Capacitor, Resistor, SignalSource, Node, Terminal, ReactiveComponent, Source, Load
-from ..math.rf import magnitude
+from ..scanner import format_value
+from ..element.component import Inductor, Capacitor, Resistor, SignalSource, Node, Terminal, ReactiveComponent, Source, ResistiveLoad
+from ..formula.rf import magnitude
 
 
 def apply_directional_layer(G, source):
@@ -162,7 +162,8 @@ def draw_circuit(c, annotate_edges=False, annotate_nodes=False, size=(20, 20)):
         bbox=dict(boxstyle='round,pad=0.4', fc="white", ec="blue", alpha=0.75)
     )
 
-    edge_labels = dict([get_edge_label(n1, n2, d, annotate_edges) for n1, n2, d in c.edges(data=True)])
+    edge_labels = dict([get_edge_label(n1, n2, d, annotate_edges)
+                       for n1, n2, d in c.edges(data=True)])
 
     nx.draw_networkx_edge_labels(
         c,
