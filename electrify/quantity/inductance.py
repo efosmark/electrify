@@ -88,7 +88,7 @@ def from_toroid(
     num_turns - Number of turns
     initial_permeability - Initial permeability
     cross_section_core_area - Cross-sectional area of the core in cm**2
-    effective_core_length - Effective length of the core in cm
+    effective    A   e_core_length - Effective length of the core in cm
     """
     if cross_section_core_area and effective_core_length:
         return henry((0.4 * cmath.pi * num_turns ** 2 * permeability_or_index *
@@ -105,4 +105,6 @@ def from_toroid_with_index(num_turns, inductance_index):
 
 
 def from_straight_wire(wire_length_mm: float, diameter_mm: float) -> henry:
-    ...
+    """pp 29"""
+    return henry(0.129 * wire_length_mm *
+                 (2.303 * cmath.log10((4.0 * wire_length_mm) / diameter_mm) - 0.75))

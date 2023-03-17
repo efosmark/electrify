@@ -1,8 +1,12 @@
+"""
+
+
+"""
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 import inspect
 import logging
-from typing import Any, Generic, TypeVar, Callable, cast
+from typing import Any, Generic, TypeVar, Callable
 from .unit import *
 
 _UT = TypeVar("_UT", bound=base_unit | float)
@@ -12,6 +16,7 @@ logging.basicConfig(encoding='utf-8', format='%(levelname)s:%(message)s')
 
 
 def get_func_dependencies(func: Callable) -> set[str]:
+    """Given a function, return a set containing the names of each argument."""
     argspec = inspect.getfullargspec(func)
     args = argspec[0]
     defaults = argspec[3]
@@ -52,7 +57,8 @@ class DependencySolver(Generic[_UT], metaclass=ABCMeta):
         return func
 
     @abstractmethod
-    def solve(self, target: str, **known_values) -> _UT | None:
+    def solve(self, target: str, **known_values):
+        """Attempt to solve for the target based on the provided known values."""
         ...
 
 
@@ -65,7 +71,7 @@ class BFS_DependencySolver(DependencySolver[_UT]):
             queue.append((target, frozenset(deps), func))
         return sorted(queue, key=lambda x: len(x[1] - resolved_symbols))
 
-    def solve(self, target: str, **known_values) -> _UT | None:
+    def solve(self, target: str, **known_values):
         """Attempt to solve for the target based on the provided known values."""
         self._N = 0
         resolving = set([target])
@@ -114,7 +120,8 @@ class BFS_DependencySolver(DependencySolver[_UT]):
 
 class DFS_DependencySolver(DependencySolver[_UT]):
 
-    def solve(self, target: str, **known_values) -> _UT | None:
+    def solve(self, target: str, **known_values):
+        """Attempt to solve for the target based on the provided known values."""
         resolving = set([target])
         resolved_symbols: set[str] = set(known_values.keys())
         stack: list[tuple[str, frozenset[str], Callable]] = []
