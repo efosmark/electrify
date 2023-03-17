@@ -21,7 +21,7 @@ class ContextTimer(object):
         if self.logger.isEnabledFor(self.logLevel):
             self.logger.log(self.logLevel, 'CTX:{: <10}|{: ^10}'.format(
                 self.title,
-                format_value(self.stop - self.start, unit='s')
+                format_value(self.stop - self.start)
             ))
 
     def seconds(self):
@@ -46,7 +46,7 @@ def logfunc(logger, logLevel=logging.DEBUG):
             logger.log(logLevel, 'FUNC:{: <10}|{: ^3}|{: ^10}|{}|{}'.format(
                 func.__name__,
                 wrapped.num_calls,
-                format_value(runtime, unit='s'),
+                format_value(runtime),
                 ", ".join(full_arg_list),
                 str(value)
             ))

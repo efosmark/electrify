@@ -1,14 +1,11 @@
 import logging
 
-import numpy as np
+from ..element.component import Node, Gnd, Capacitor, Inductor, Resistor, Source, ResistiveLoad, ReactiveComponent
+from ..common import parallel_resistance, series_resistance
+from ..formula.capacitance import series_capacitance, parallel_capacitance
+from ..formula.inductance import series_inductance, parallel_inductance
+from ..formula.rf import magnitude
 
-
-from ..component import Node, Gnd, Capacitor, Inductor, Resistor, Source, Terminal, Load, ReactiveComponent
-from ..math import magnitude, parallel_resistance, series_resistance, series_capacitance, parallel_capacitance, series_inductance, parallel_inductance, solve_for_V, solve_for_I
-
-
-np.set_printoptions(precision=2)
-logging.basicConfig(encoding='utf-8', format='%(levelname)s:%(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
@@ -18,6 +15,7 @@ class parallelset(set):
 
 
 def _add_to_meld_group(meld_groups, u, v, is_parallel=False):
+
     if u in meld_groups:
         meld_groups[v] = meld_groups[u]
         meld_groups[v].add(v)
@@ -36,25 +34,39 @@ def _add_to_meld_group(meld_groups, u, v, is_parallel=False):
     return meld_groups
 
 
+def _combine_capacitors(*nodes, is_parallel=False):
+    value_list = [i.value for i in nodes]
+    if is_parallel:
+        new_cap_value = parallel_capacitance(*value_list)
+    else:
+        new_cap_value = series_capacitance(*value_list)
+    return Capacitor(new_cap_value)
+
+
+def _combine_inductors(*nodes, is_parallel=False):
+    value_list = [i.value for i in nodes]
+    if is_parallel:
+        return Inductor(parallel_inductance(*value_list))
+    return Inductor(series_inductance(*value_list))
+
+
+def _combine_resistors(nodes, is_parallel):
+    if is_parallel:
+        n = Resistor(parallel_resistance(*[r.value for r in nodes]))
+    else:
+        n = Resistor(series_resistance(*[r.value for r in nodes]))
+
+
 def combine_elements(*nodes, is_parallel=False):
     logger.debug("Combining nodes (parallel=%s): %s", is_parallel, nodes)
     if isinstance(nodes[0], Node):
         n = Node()
     elif isinstance(nodes[0], Capacitor):
-        if is_parallel:
-            n = Capacitor(parallel_capacitance(*[c.value for c in nodes]))
-        else:
-            n = Capacitor(series_capacitance(*[c.value for c in nodes]))
+        n = _combine_capacitors(nodes, is_parallel)
     elif isinstance(nodes[0], Inductor):
-        if is_parallel:
-            n = Inductor(parallel_inductance(*[i.value for i in nodes]))
-        else:
-            n = Inductor(series_inductance(*[i.value for i in nodes]))
+        n = _combine_inductors(nodes, is_parallel)
     elif isinstance(nodes[0], Resistor):
-        if is_parallel:
-            n = Resistor(parallel_resistance(*[r.value for r in nodes]))
-        else:
-            n = Resistor(series_resistance(*[r.value for r in nodes]))
+        n = _combine_resistors(nodes, is_parallel)
     else:
         raise TypeError("Cannot combine nodes:{}".format(nodes))
     logger.debug('Combined: %s', n)
@@ -63,9 +75,14 @@ def combine_elements(*nodes, is_parallel=False):
 
 class Reducer(object):
     logger = logger
-    irreducible_types = (Source, Gnd, Load)
+    irreducible_types = (Source, Gnd, ResistiveLoad)
 
-    def __init__(self, in_place=False, series=True, parallel=True, nodal=True, frequency=None, max_iterations=10):
+    def __init__(
+            self, in_place=False, series=True, parallel=True, nodal=True, frequency=None,
+            max_iterations=10):
+        """
+        fdaf
+        """
         self._in_place = in_place
         self._series = series
         self._parallel = parallel
@@ -74,6 +91,9 @@ class Reducer(object):
         self._max_iterations = max_iterations
 
     def reduce(self, circuit):
+        """
+        ---
+        """
         self.logger.debug('Beginning reduce operation on %s.', circuit)
         meld_groups = dict()
         replace_with = dict()
@@ -93,8 +113,10 @@ class Reducer(object):
                 continue
 
             if self._frequency is not None and isinstance(node, ReactiveComponent):
-                replace_with[node] = Resistor(magnitude(node.impedance(self._frequency)))
-                self.logger.debug(' :: #Replacement candidate found: %s replaced with %s', node, replace_with[node])
+                replace_with[node] = Resistor(magnitude(node.impedance(self._frequency) or 0))
+                self.logger.debug(
+                    ' :: #Replacement candidate found: %s replaced with %s', node,
+                    replace_with[node])
                 continue
 
             neighbors = set(circuit.neighbors(node))
@@ -104,8 +126,10 @@ class Reducer(object):
 
                 # Reactive replacement
                 if self._frequency is not None and isinstance(n, ReactiveComponent):
-                    replace_with[n] = Resistor(magnitude(n.impedance(self._frequency)))
-                    self.logger.debug(' :: Replacement candidate found: %s replaced with %s', n, replace_with[n])
+                    replace_with[n] = Resistor(magnitude(n.impedance(self._frequency) or 0))
+                    self.logger.debug(
+                        ' :: Replacement candidate found: %s replaced with %s', n, replace_with
+                        [n])
                     continue
 
                 # Touching nodes
@@ -132,7 +156,9 @@ class Reducer(object):
                             continue
 
                         # Parallel optimization
-                        if type(n2) == type(n) and set(circuit.neighbors(n2)) == set(circuit.neighbors(n)):
+                        if type(n2) == type(n) and set(
+                                circuit.neighbors(n2)) == set(
+                                circuit.neighbors(n)):
                             self.logger.debug(' :: Parallel candidate found: %s and %s', n2, n)
                             _add_to_meld_group(meld_groups, n, n2, is_parallel=True)
                             break
@@ -215,6 +241,36 @@ class Reducer(object):
         return 0
 
     def clone_edges(self, circuit, source, target):
+        """
+        Clone all edges from `source` and add them to `target`.
+
+        Parameters
+        ----------
+        circuit : int or tuple of int
+            Shape of the empty matrix.
+        source : data-type, optional
+            Desired output data-type.
+        target : {'C', 'F'}, optional
+            Whether to store multi-dimensional data in row-major
+            (C-style) or column-major (Fortran-style) order in
+            memory.
+
+        See Also
+        --------
+        empty_like, zeros
+
+        Notes
+        -----
+        `empty`, unlike `zeros`, does not set the matrix values to zero,
+        and may therefore be marginally faster.  On the other hand, it requires
+        the user to manually set all the values in the array, and should be
+        used with caution.
+
+        Examples
+        --------
+        >>> import numpy.matlib
+
+        """
         self.logger.debug("Cloning edges from %s to %s", source, target)
         for p in circuit.neighbors(source):
             if p is not target:

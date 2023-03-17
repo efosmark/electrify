@@ -1,7 +1,7 @@
 from ..circuit import SubCircuit
-from ..component import PassiveComponent, Inductor, Capacitor, Resistor
-from ..value import parse_value
-from ..math import rf
+from ..element.component import PassiveComponent, Inductor, Capacitor, Resistor
+from ..scanner import parse_value
+from ..formula import rf
 
 import numpy as np
 

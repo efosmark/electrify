@@ -43,20 +43,20 @@ VALUE_TYPES = {
 ### Units of Measure ###
 
 
-FARAD = "FARAD"  # Unit of capacitance
-HENRY = "HENRY"  # Unit of inductance
-OHM = "OHM"  # Unit of resistance & reactance
-SIEMENS = "SIEMENS"  # Unit of conductance and susceptance
-HERTZ = "HERTZ"  # Unit of frequency
-VOLT = "VOLT"  # Unit of electromotive force
-AMPERE = "AMPERE"  # Unit of current
-WATT = "WATT"  # Unit of power
-COULOMB = "COULOMB"  # Unit of charge
-METER = "METER"  # Unit of distance (e.g. wavelength)
-SECOND = "SECOND"  # Unit of time (2nd 1/60th of an hour)
-MINUTE = "MINUTE"  # Unit of time (1/60th of an hour)
-HOUR = "HOUR"  # Unit of time
-JOULE = "JOULE"  # Unit of energy
+FARAD = "farad"  # Unit of capacitance
+HENRY = "henry"  # Unit of inductance
+OHM = "ohm"  # Unit of resistance & reactance
+SIEMENS = "siemens"  # Unit of conductance and susceptance
+HERTZ = "hertz"  # Unit of frequency
+VOLT = "volt"  # Unit of electromotive force
+AMPERE = "ampere"  # Unit of current
+WATT = "watt"  # Unit of power
+COULOMB = "coulomb"  # Unit of charge
+METER = "meter"  # Unit of distance (e.g. wavelength)
+SECOND = "second"  # Unit of time (2nd 1/60th of an hour)
+MINUTE = "minute"  # Unit of time (1/60th of an hour)
+HOUR = "hour"  # Unit of time
+JOULE = "joule"  # Unit of energy
 
 
 # Primary unit symbols

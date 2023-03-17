@@ -2,25 +2,27 @@ from functools import lru_cache
 import collections
 import logging
 
-import numpy as np
 import networkx as nx
+
+from electrify.element.element import Element
 
 from .reducer import Reducer
 from .solver import CircuitSolver
 
-from ..component import Node, Gnd, Source, Terminal, Load
-
-
-np.set_printoptions(precision=2)
-logging.basicConfig(encoding='utf-8', format='%(levelname)s:%(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
+from ..element import Node, Gnd, Source, Terminal, ResistiveLoad
 
 
 class Circuit(nx.Graph):
-    logger = logger
-
-    irreducible_types = (Source, Gnd, Load)
+    """
+    """
+    name: str
+    gnd: Node
+    last: Element | None
+    source_node: Element | None
+    load_node: Element | None
+    terminal_map: dict
+    solver: CircuitSolver
+    logger: logging.Logger
 
     def __init__(self):
         nx.Graph.__init__(self)
@@ -32,6 +34,8 @@ class Circuit(nx.Graph):
         self.terminal_map = collections.defaultdict(lambda: {'A': None, 'B': None})
         self.reduction_stats = None
         self.solver = CircuitSolver(self)
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.WARNING)
 
     def __str__(self):
         return '<Circuit \'{}\' n={} e={}>'.format(
@@ -61,8 +65,8 @@ class Circuit(nx.Graph):
     def __add__(self, value):
         return self.add(value)
 
-    def add_element(self, e):
-        logger.debug('Adding element: %s', e)
+    def add_element(self, e: Element):
+        self.logger.debug('Adding element: %s', e)
         if isinstance(e, Node):
             self.add_node(e)
         elif isinstance(e, nx.Graph):
@@ -72,8 +76,7 @@ class Circuit(nx.Graph):
         return self
 
     def _terminalize(self, e):
-        print('*'*20, e)
-        logger.debug('__TERM   %s', e)
+        self.logger.debug('__TERM   %s', e)
         if e in self.terminal_map.keys():
             return (e, e)
 
@@ -106,7 +109,7 @@ class Circuit(nx.Graph):
             return conns
 
     def _connect(self, u, v):
-        logger.debug('_CONN    %s    %s', u, v)
+        self.logger.debug('_CONN    %s    %s', u, v)
         if isinstance(u, nx.Graph):
             u = u.B
         if isinstance(v, nx.Graph):
@@ -130,7 +133,7 @@ class Circuit(nx.Graph):
         return self
 
     def wire(self, u, v):
-        logger.debug('WIRE     %s    %s', u, v)
+        self.logger.debug('WIRE     %s    %s', u, v)
         nodes = list(self.nodes())
         if u not in nodes:
             self.add_element(u)
@@ -145,22 +148,22 @@ class Circuit(nx.Graph):
         self.logger.debug('ADDING:  %s of type %s', element, type(element))
         if isinstance(element, Source):
             if self.source_node is None:
-                logger.debug('%s: Setting as source', element)
+                self.logger.debug('%s: Setting as source', element)
                 self.source_node = element
             if element.GND is None:
-                logger.debug('%s: Setting element GND:  %s', element, self.GND)
+                self.logger.debug('%s: Setting element GND:  %s', element, self.GND)
                 element.GND = self.GND
             if self.last is not None:
                 self.add_edge(self.last, element)
             if set_latest:
                 self.last = element
-        elif isinstance(element, Load):
+        elif isinstance(element, ResistiveLoad):
             if self.load_node is None:
-                logger.debug('%s: Setting as load', element)
+                self.logger.debug('%s: Setting as load', element)
                 self.load_node = element
-            if element.GND is None:
-                logger.debug('%s: Setting element GND:  %s', element, self.GND)
-                element.GND = self.GND
+            if element.gnd is None:
+                self.logger.debug('%s: Setting element GND:  %s', element, self.GND)
+                element.gnd = self.GND
             if self.last is not None:
                 self.add_edge(self.last, element)
             if set_latest:

@@ -2,7 +2,7 @@ import numpy as np
 
 from ..math import f0_from_bandwidth
 from ..circuit import SubCircuit
-from ..component import Resistor, Inductor, Capacitor
+from ..element.component import Resistor, Inductor, Capacitor
 
 
 BUTTERWORTH_COEF_MAX_FLAT = {
