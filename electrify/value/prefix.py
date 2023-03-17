@@ -6,6 +6,7 @@ It also handles formatting of numbers to their most appropriate magnitude.
 """
 from typing import Sequence, SupportsFloat, TypeVar, cast, ClassVar
 from typing_extensions import Self
+
 # Generic type to ensure magnitude conversions preserve unit type
 _V = TypeVar('_V', bound=SupportsFloat)
 
@@ -108,7 +109,7 @@ def _fmt(x, places, sep, unit_symbol, isimag=False):
     if value == '-0':
         value = '0'
     if isimag:
-        return f'[{value}j]{sep}{mag.symbol}{unit_symbol}'
+        return f'{value}j{sep}{mag.symbol}{unit_symbol}'
     return f'{value}{sep}{mag.symbol}{unit_symbol}'
 
 

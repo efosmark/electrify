@@ -1,0 +1,7 @@
+[pycodestyle]
+count = False
+ignore = E741, D105, D203
+max-line-length = 100
+
+[pydocstyle]
+ignore = D105
