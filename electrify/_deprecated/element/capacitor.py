@@ -16,7 +16,7 @@ from ..quantity.capacitance import get_capacitance
 
 from ..formula.sum import harmonic_sum
 from .element import Element
-from .proto import Resistive, Reactive, Capacitive
+from ...network.proto import Resistive, Reactive, Capacitive
 
 
 class Capacitor(Element, Resistive, Reactive, Capacitive):
@@ -99,7 +99,7 @@ class Capacitor(Element, Resistive, Reactive, Capacitive):
         Returns:
             coulomb: Electric charge in coulombs (C).
         """
-        return get_charge(C=self._capacitance, V=voltage)
+        return get_charge(C=self._capacitance, V=volt(voltage))
 
     def energy(self, voltage: volt | float) -> joule:
         """
@@ -111,7 +111,7 @@ class Capacitor(Element, Resistive, Reactive, Capacitive):
         Returns:
             joule: Energy when the capacitor is at the given voltage.
         """
-        return get_energy(Q=self.charge(voltage), V=voltage)
+        return get_energy(Q=self.charge(voltage), V=volt(voltage))
 
     def impedance(self, frequency: hertz | float) -> ohm:
         """

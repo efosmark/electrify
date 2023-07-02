@@ -16,7 +16,7 @@ from .load import ResistiveLoad
 from .node import Node, Terminal, Gnd
 from .resistor import Resistor
 from .source import VoltageSource, CurrentSource, SignalSource
-from . import proto
+from ...network import proto
 
 element_types = [Element, Capacitor, Inductor, ResistiveLoad, Resistor,
                  VoltageSource, CurrentSource, SignalSource, Node, Gnd]

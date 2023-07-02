@@ -14,10 +14,24 @@
                 "showReuseMessage": false,
                 "clear": false
             },
-            "command": "./env/bin/pip install -e .",
+            "command": "~/.venv/project-electrify/bin/pip install -e .",
             "options": {
                 "statusbar": {
-                    "label": "$(terminal) pip install -e"
+                    "label": "$(terminal) Install Self"
+                }
+            }
+        },
+        {
+            "label": "requirements.txt",
+            "type": "shell",
+            "presentation": {
+                "showReuseMessage": false,
+                "clear": true
+            },
+            "command": "~/.venv/project-electrify/bin/pip install --no-cache-dir -r ./requirements.txt",
+            "options": {
+                "statusbar": {
+                    "label": "$(terminal) Install Reqs"
                 }
             }
         }

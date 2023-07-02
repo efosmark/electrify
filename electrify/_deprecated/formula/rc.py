@@ -17,15 +17,13 @@ def rc_filter_cutoff(RS: float, RL: float, C: float) -> float:
     > The 3-dB point occurs when the reactance of the capacitor is equal to
     the parallel combination of the source and load resistances.
 
-    Parameters
-    ----------
-     * `RS: float` — _description_
-     * `RL: float` — _description_
-     * `C: float` — _description_
+    Args:
+        RS (float): _description_
+        RL (float): _description_
+        C (float): _description_
 
-    Returns
-    -------
-     * `float` — _description_
+    Returns:
+        float : _description_
 
     Examples
     --------
@@ -38,8 +36,3 @@ def rc_filter_cutoff(RS: float, RL: float, C: float) -> float:
     """
     R = parallel_resistance([RS, RL])
     return 1.0 / (2 * np.pi * R * C)
-
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()

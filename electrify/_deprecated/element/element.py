@@ -40,7 +40,7 @@ class Element:
 
         Parameters
         ----------
-         * `name: str|None = None` — Optional element name
+        name (str|None = None): Optional element name
 
         """
         if name is None:

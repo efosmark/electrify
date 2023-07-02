@@ -1,10 +1,10 @@
 """Representations of inductors."""
 import cmath
 
-from electrify.formula.sum import harmonic_sum
+from electrify.value.sum import harmonic_sum
 from ..value.unit import *
 from .element import Element
-from .proto import Resistive, Reactive, Inductive
+from ...network.proto import Resistive, Reactive, Inductive
 from ..quantity.inductance import get_inductance
 from ..quantity.reactance import get_reactance
 
@@ -122,8 +122,8 @@ class Inductor(Element, Resistive, Reactive, Inductive):
 
         Parameters
         ----------
-         * `frequency: hertz|float` — Frequency input in hertz (Hz)
-         * `abs: bool` — If true, Z is returned as an absolute value, rather than complex
+        frequency (hertz|float): Frequency input in hertz (Hz)
+        abs (bool): If true, Z is returned as an absolute value, rather than complex
 
         Returns
         -------
@@ -147,8 +147,8 @@ class Inductor(Element, Resistive, Reactive, Inductive):
 
         Parameters
         ----------
-         * `frequency: hertz|float` — Frequency of interest, in hertz
-         * `reactance: ohm|float` — Reactance of interest, in ohms
+        frequency (hertz|float): Frequency of interest, in hertz
+        reactance (ohm|float): Reactance of interest, in ohms
 
         """
         return cls(
@@ -162,7 +162,7 @@ class Inductor(Element, Resistive, Reactive, Inductive):
 
         Parameters
         ----------
-        * `current: ampere|float` — Current in amps (A)
+        current (ampere|float): Current in amps (A)
 
         Returns
         -------

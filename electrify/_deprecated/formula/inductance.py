@@ -18,14 +18,12 @@ def inductive_coupling_coefficient(
 
     All arguments must share the same unit and magnitude.
 
-    Parameters
-    ----------
+    Args:
      * `L_first: henry|float` — Self-inductance of the first inductor, in Henrys (H)
      * `L_second: henry|float` — Self-inductance of the second inductor, in Henrys (H)
      * `L_mutual: henry|float` — Mutual-inductance of the interacting fields, in Henrys (H)
 
-    Returns
-    -------
+    Returns:
      * `float` — The coupling coefficient describing th
 
     Examples
@@ -37,4 +35,3 @@ def inductive_coupling_coefficient(
     None.
     """
     return float(L_mutual) / np.sqrt(L_first * float(L_second))
-

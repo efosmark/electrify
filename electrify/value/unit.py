@@ -40,7 +40,7 @@ Here, we see a type conversion from ``(volt / ohm = ampere)``
 """
 import cmath
 from functools import cache
-from typing import ClassVar, Optional, SupportsComplex, SupportsFloat, SupportsIndex, overload
+from typing import ClassVar, overload
 from typing_extensions import Self
 from .prefix import Prefix, format_prefix
 
@@ -87,10 +87,12 @@ class base_unit(complex):
 
     @cache
     def polar(self) -> tuple[float, float]:
+        """Get the polar form of the unit."""
         return cmath.polar(self)
 
     @classmethod
     def from_polar(cls, magnitude: float, phase_angle: float):
+        """Given a polar form, get a unit with the complex value."""
         return cls(cmath.rect(magnitude, phase_angle))
 
     def _type_convert_div(self, __x, type_map):
@@ -155,7 +157,7 @@ class ampere(base_unit):
     @overload
     def __mul__(self, __x: _number): ...
 
-    def __mul__(self, __x) -> complex:
+    def __mul__(self, __x):
         return self._type_convert_mul(__x, {
             henry: weber,
             ohm: volt,
@@ -196,7 +198,7 @@ class coulomb(base_unit):
     @overload
     def __mul__(self, __x: _number): ...
 
-    def __mul__(self, __x) -> complex:
+    def __mul__(self, __x):
         return self._type_convert_mul(__x, {
             ohm: weber,
             volt: joule
@@ -230,7 +232,7 @@ class farad(base_unit):
     @overload
     def __mul__(self, __x: _number): ...
 
-    def __mul__(self, __x) -> complex:
+    def __mul__(self, __x):
         return self._type_convert_mul(__x, {
             hertz: siemens,
             ohm: second,
@@ -265,7 +267,7 @@ class henry(base_unit):
     @overload
     def __mul__(self, __x: _number): ...
 
-    def __mul__(self, __x) -> complex:
+    def __mul__(self, __x):
         return self._type_convert_mul(__x, {
             ampere: weber,
             hertz: ohm,
@@ -352,7 +354,7 @@ class ohm(base_unit):
     @overload
     def __mul__(self, __x: _number): ...
 
-    def __mul__(self, __x) -> complex:
+    def __mul__(self, __x):
         return self._type_convert_mul(__x, {
             ampere: volt,
             coulomb: weber,
@@ -391,7 +393,7 @@ class second(base_unit):
     @overload
     def __mul__(self, __x: _number): ...
 
-    def __mul__(self, __x) -> complex:
+    def __mul__(self, __x):
         return self._type_convert_mul(__x, {
             ampere: coulomb,
             ohm: henry,
@@ -447,7 +449,7 @@ class siemens(base_unit):
     @overload
     def __mul__(self, __x: _number): ...
 
-    def __mul__(self, __x) -> complex:
+    def __mul__(self, __x):
         return self._type_convert_mul(__x, {
             henry: second,
             volt: ampere,
@@ -486,7 +488,7 @@ class volt(base_unit):
     @overload
     def __mul__(self, __x: _number): ...
 
-    def __mul__(self, __x) -> complex:
+    def __mul__(self, __x):
         return self._type_convert_mul(__x, {
             ampere: watt,
             coulomb: joule,
@@ -519,7 +521,7 @@ class watt(base_unit):
     @overload
     def __mul__(self, __x: _number): ...
 
-    def __mul__(self, __x) -> complex:
+    def __mul__(self, __x):
         return self._type_convert_mul(__x, {
             second: joule
         })
@@ -560,7 +562,7 @@ class weber(base_unit):
     @overload
     def __mul__(self, __x: _number): ...
 
-    def __mul__(self, __x) -> complex:
+    def __mul__(self, __x):
         return self._type_convert_mul(__x, {
             ampere: joule
         })

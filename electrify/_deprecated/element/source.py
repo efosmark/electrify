@@ -2,7 +2,7 @@ import math
 from ..value import *
 from .element import Element
 from .node import Node
-from .proto import Resistive, HasVoltage, HasSignal, HasCurrent
+from ...network.proto import Resistive, HasVoltage, HasSignal, HasCurrent
 
 
 class Source(Element, Resistive):

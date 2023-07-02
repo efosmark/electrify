@@ -17,7 +17,7 @@ from ..quantity.reactance import get_capacitive_reactance, get_inductive_reactan
 from ..quantity.current import get_current
 from ..quantity.resistance import from_color_code
 from .element import Element
-from .proto import Resistive, Reactive
+from ...network.proto import Resistive, Reactive
 
 
 class _Topology(list):
@@ -122,7 +122,7 @@ class Resistor(Element, Resistive, Reactive):
 
         Parameters
         ----------
-         * `resistance: ohm|float = 0` — Internal resistance of the element
+        resistance (ohm|float = 0): Internal resistance of the element
 
         """
         super().__init__(**kwargs)
@@ -166,10 +166,10 @@ class Resistor(Element, Resistive, Reactive):
 
         Parameters
         ----------
-         * `first: str` — First color code band
-         * `second: str` — Second color code band
-         * `third: str` — Third color code band
-         * `forth: str | None = None` — Optional forth color code band
+        first (str): First color code band
+        second (str): Second color code band
+        third (str): Third color code band
+        forth (str | None = None): Optional forth color code band
 
         Returns
         -------
@@ -210,7 +210,7 @@ class Resistor(Element, Resistive, Reactive):
 
         Parameters
         ----------
-         * `frequency: hertz|float` — _description_
+        frequency (hertz|float): _description_
 
         Returns
         -------

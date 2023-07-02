@@ -19,10 +19,9 @@ def attenuation_factor(cx: complex) -> float:
 
     ParameteR_src
     ----------
-     * `cx: complex` — Complex number representing the response from H(ω)
+        cx (complex): Complex number representing the response from H(ω)
 
-    Returns
-    -------
+    Returns:
      * `float` — _description_
 
     Examples
@@ -41,15 +40,13 @@ def voltage_gain(V1: float, V2: float, Z1: float = 1.0, Z2: float = 1.0) -> floa
     """
     Compute the voltage gain between two references (V1,Z1) vs (V2,Z2).
 
-    Parameters
-    ----------
+    Args:
      * `V1: float` — _description_
      * `V2: float` — _description_
      * `Z1: float = 1.0` — _description_
      * `Z2: float = 1.0` — _description_
 
-    Returns
-    -------
+    Returns:
      * `float` — _description_
 
     Examples
@@ -97,8 +94,7 @@ def available_power(V_in: float, R_src: float) -> float:
      * `V_in: float` — _description_
      * `R_src: float` — _description_
 
-    Returns
-    -------
+    Returns:
      * `float` — _description_
 
     Examples
@@ -121,8 +117,7 @@ def load_power(R_src: float, R_load: float) -> float:
      * `R_src: float` — Source resistance
      * `R_load: float` — Load resistance
 
-    Returns
-    -------
+    Returns:
      * `float` — _description_
 
     Examples
@@ -140,13 +135,11 @@ def insertion_loss(R_src: float, R_load: float) -> float:
     """
     Compute the insertion loss in dB when matching a source and load.
 
-    Parameters
-    ----------
+    Args:
      * `R_src: float` — Source resistance, in Ohms
      * `R_load: float` — Load resistance, in Ohms
 
-    Returns
-    -------
+    Returns:
      * `float` — Insertion loss in dB
 
     Examples
@@ -161,10 +154,5 @@ def insertion_loss(R_src: float, R_load: float) -> float:
     """
     R_src = float(R_src)
     R_load = float(R_load)
-    return 20.0 * np.log10(e.magnitude(load_power(R_src, R_load) / available_power(R_src, R_load)))
+    return 20.0 * np.log10(magnitude(load_power(R_src, R_load) / available_power(R_src, R_load)))
     # return 20 * np.log10(R_parallel / (R_parallel + R_source))
-
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
