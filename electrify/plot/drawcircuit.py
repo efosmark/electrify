@@ -1,179 +1,208 @@
+import math
+from typing import Any
 import networkx as nx
 import matplotlib.pyplot as plt
-from ..scanner import format_value
-from ..element.component import Inductor, Capacitor, Resistor, SignalSource, Node, Terminal, ReactiveComponent, Source, ResistiveLoad
-from ..formula.rf import magnitude
 
+from electrify.network.property import NegativePole, Pole, PositivePole, Property
+from electrify.value import watt
+from electrify.value.unit import farad, henry, ohm, ampere, volt, hertz
 
-def apply_directional_layer(G, source):
-    leaves = [v for v, d in G.out_degree() if d == 0]
+def shift_position(pos, shift_x=0, shift_y=0, keys=None):
+    res = dict()
+    for k,(x,y) in pos.items():
+        if keys is None or k in keys:
+            x = x + shift_x
+            y = y + shift_y
+            res[k] = [x, y]
+    return res
 
-    for leaf in leaves:
-        longest = None
-        for x in nx.all_simple_paths(G, source, leaf):
-            if longest is None or len(x) > len(longest):
-                longest = x
-
-        if longest is not None:
-            for n in longest:
-                if "layer" not in G.nodes[n]:
-                    G.nodes[n]["layer"] = 0
-                current_layer = G.nodes[n]["layer"]
-                for s in G.successors(n):
-                    if "layer" in G.nodes[s]:
-                        continue
-                    G.nodes[s]["layer"] = current_layer - 1
-
-    for n in G.nodes():
-        if "layer" not in G.nodes[n]:
-            try:
-                parent_layer = G.nodes[list(G.predecessors(n))[0]]["layer"]
-            except Exception as e:
-                G.nodes[n]["layer"] = 0
-            else:
-                G.nodes[n]["layer"] = parent_layer - 1
-
-
-def apply_layer(G, source=None, layer=0):
-    if source is None:
-        source = G.source_node
-    G.nodes[source]["layer"] = layer
-    for n in G.neighbors(source):
-        if "layer" in G.nodes[n] and G.nodes[n]["layer"] >= layer:
-            continue
-        apply_layer(G, n, layer - 1)
-    if layer == 0:
-        for n in G.nodes():
-            if 'layer' not in G.nodes[n]:
-                G.nodes[n]["layer"] = 0
-
-
-def choose_color(c):
-    if isinstance(c, Terminal):
-        return "white"
-    if isinstance(c, Node):
-        return "lightgray"
-    if type(c) is Inductor:
-        return "lightblue"
-    if type(c) is Capacitor:
-        return "lightgreen"
-    if type(c) is Resistor:
-        return "pink"
-    if type(c) is SignalSource:
-        return "lightblue"
+def choose_color(c, d=None):
+    if isinstance(c, Property):
+        if type(c.value) is volt:
+            return "#9cc669"
+        if type(c.value) is hertz:
+            return "yellow"
+        if type(c.value) is ohm:
+            return "#c67c69"
+        if type(c.value) is farad:
+            return "#69c686"
+        if type(c.value) is henry:
+            return "#8669c6"
+    if isinstance(c, Pole):
+        return "#FFFFFF"
     return "gray"
 
+def choose_node_edge_color(c, d=None):
+    if isinstance(c, NegativePole):
+        return '#b03e49'
+    if isinstance(c, PositivePole):
+        return '#4b8346'
+    return 'black'
 
-def get_node_label(n, d, annotate=True):
-    label = str(n)
-    if not annotate:
-        return n, label
+def choose_edge_color(n1, n2, d):
+    if isinstance(n1, NegativePole) and isinstance(n2, NegativePole):
+        return '#FFFFFF'
+    if isinstance(n2, NegativePole):
+        return '#DDDDDD'
+    return 'black'
 
-    label += '\n'
+def choose_edge_width(n1, n2, d):
+    if isinstance(n2, NegativePole):
+        return 1
+    return 5
 
-    if "res_self" in d and not isinstance(n, (Node)):
-        label += "\nresistance = {} / {}".format(format_value(d.get("res_self", 0), places=0),
-                                                 format_value(d.get("res_total", 0), places=0))
+def choose_node_size(c, d=None):
+    return 3000
 
-    if "res_total" in d and isinstance(n, (Node)):
-        label += "\nR={}".format(format_value(d.get("res_total", 0), places=0))
+def get_edge_label(n1, n2, d):
+    if isinstance(n2, NegativePole):
+        return (n1, n2), ""
+    z = d.get('z')
+    v = d.get('v')
+    i = d.get('i')
+    label = []
+    if z:
+        label.append('{}'.format(ohm(z)))
+    if v:
+        label.append('{}'.format(volt(v)))
+    if i:
+        label.append('{}'.format(ampere(i)))
+    return (n1, n2), '\n'.join(label)
 
-    if "equation" in d:
-        equation = d.get("equation", '--')
-        label += "\n{}".format(equation)
+def get_node_label(n, d):
+    label = []
+    if isinstance(n, Pole):
+        label.append(n.port.network.__class__.__name__)
+        label.append(f'{n.symbol}')
+        label = f'{n.port.network.__class__.__name__}[{n.symbol}{n.port.id}]'
+    else:
+        label.append(n.name)
+        label.append(n.value)
+        label = str(n)
+    
+    label += "\n"
+    label += "—" * (len(label) - 1)
+    
+    zs = d.get('zs')
+    if zs:
+        label += '\nZ_self = {}'.format(ohm(zs))
+    
+    z = d.get('z')
+    if z:
+        label += '\nZ_load = {}'.format(ohm(z))
+    
+    V_in = d.get('v_in')
+    if V_in:
+       label += '\nV_in   = {}'.format(volt(d.get('v_in')))
+    
+    V_out = d.get('v_out')
+    if V_out:
+       label += '\nV_out  = {}'.format(volt(d.get('v_out')))
+    
+    V_drop = d.get('v_drop')
+    if V_drop:
+       label += '\nV_drop  = {}'.format(volt(d.get('v_drop')))
+    
+    i = d.get('i')
+    if i:
+        label += '\nI  = {}'.format(ampere(d.get('i')))
+    
+    P = d.get('p')
+    if P:
+       label += '\nP   = {}'.format(watt(d.get('p')))
+    return (n, label)
 
-    if "depth" in d:
-        depth = d.get("depth", '--')
-        label += "\n{}".format(depth)
+def choose_node_linewidth(n, d):
+    if isinstance(n, Pole):
+        return 3
+    return 1
 
-    if "gain" in d:
-        g = d.get("gain", 0)
-        label += "\nG = {}".format(format_value(g), places=0)
-
-    if "v_drop" in d and not isinstance(n, Node):
-        label += "\nvoltage = {}V / {}V".format(format_value(d['v_drop'],
-                                                             places=0),
-                                                format_value(d['voltage'],
-                                                             places=0))
-    elif 'voltage' in d:
-        label += "\n{}V".format(format_value(d['voltage'], places=0))
-
-    if "current" in d and not isinstance(n, Node):
-        current = d.get("current", 0)
-        label += "\ncurrent = {}A".format(format_value(current, places=0))
-
-    if "pwr_dis" in d and not isinstance(n, Node):
-        label += "\npower = {}W / {}W".format(
-            format_value(d.get("pwr_dis", 0), places=0),
-            format_value(d.get("pwr_tot", 0), places=0)
-        )
-
-    return n, label
-
-
-def get_edge_label(n1, n2, d, annotate=True):
-    label = ""
-    if not annotate:
-        return (n1, n2), label
-
-    if "voltage" in d:
-        label += "{}V".format(format_value(format_value(d['voltage'])))
-
-    if "current" in d and d["current"] > 0:
-        current = d["current"]
-        label += " {}A".format(format_value(format_value(current)))
-
-    return (n1, n2), label
-
-
-def draw_circuit(c, annotate_edges=False, annotate_nodes=False, size=(20, 20)):
+def draw_circuit(c: nx.Graph, size=(10, 15), layered=False, pos=None):
     fig, ax = plt.subplots()
     fig.set_size_inches(*size)
+    fig.tight_layout()
     plt.axis('off')
-    # apply_layer(c)
+    ax.margins(0.1, 0.02)
+    
+    if pos is None:
+        if layered:
+            pos = nx.multipartite_layout( # type: ignore
+                c,
+                align="horizontal"
+            )
+        else:
+            pos = nx.spring_layout(c)
 
-    pos = nx.multipartite_layout(
-        c,
-        subset_key="layer",
-        align="horizontal",
-    )
+    nodelist = [(n, d) for n,d in c.nodes(data=True)]
+    valid_nodes = [n for n,d in nodelist]
+    edgelist = [(n1, n2, d) for n1, n2, d in c.edges(data=True) if n2 in valid_nodes]
 
-    nx.draw(
-        c,
-        pos=pos,
-        ax=ax,
-        node_color=[choose_color(n) for n in c.nodes],
-        node_size=1200,
-        width=0.3,
-        with_labels=False
-    )
-
-    impedance_labels = dict([get_node_label(n1, d, annotate_nodes)
-                            for n1, d in c.nodes(data=True)])
-    nx.draw_networkx_labels(
-        c,
-        pos,
-        ax=ax,
-        labels=impedance_labels,
-        # verticalalignment="center",
-        # horizontalalignment="left",
-        font_size=12,
+    default_params = dict(
+        G=c,
+        #pos=pos,
+        font_size=8,
         font_family="monospace",
-        bbox=dict(boxstyle='round,pad=0.4', fc="white", ec="blue", alpha=0.75)
+        ax=ax
+    )
+    
+    shared_node_params:dict[str,Any] = dict(
+        **default_params,
+        node_size=[choose_node_size(n,d) for n,d in nodelist], # type: ignore
+        node_shape='o',
+        nodelist=valid_nodes,
+    )
+    
+    nx.draw_networkx(
+        **shared_node_params,
+        pos=pos,
+        with_labels=False,
+        node_color=[choose_color(n,d) for n,d in nodelist], # type: ignore
+        linewidths=[choose_node_linewidth(n,d) for n,d in nodelist], #type: ignore
+        edgecolors=[choose_node_edge_color(n1, d) for n1, d in nodelist],
+        
+        edgelist=edgelist,
+        width=[choose_edge_width(n1, n2, d) for n1, n2, d in edgelist],
+        edge_color=[choose_edge_color(n1, n2, d) for n1, n2, d in edgelist],
+        #style=":",
     )
 
-    edge_labels = dict([get_edge_label(n1, n2, d, annotate_edges)
-                       for n1, n2, d in c.edges(data=True)])
+    nx.draw_networkx_labels(
+        **default_params,
+        pos=shift_position(pos, shift_x=-0.035),
+        horizontalalignment="left",
+        labels=dict([
+            get_node_label(n1, d)
+            for n1, d in nodelist
+        ]),
+        bbox=dict(
+            boxstyle='round',
+            fc="#EEEEEE",
+            mutation_aspect=0.5,
+            pad=1,
+            ec="#EEEEEE",      
+            alpha=0.7
+        )
+    )
 
     nx.draw_networkx_edge_labels(
-        c,
-        pos,
-        ax=ax,
-        edge_labels=edge_labels,
-        font_size=12,
-        font_family="monospace",
-        bbox=dict(boxstyle='round,pad=0.4', fc="white", ec="blue")
+        **default_params,
+        pos=pos,
+        edge_labels=dict([
+            get_edge_label(n1, n2, d)
+            for n1, n2, d in c.edges(data=True)
+        ]),
+        bbox=dict(
+            boxstyle='round',
+            fc="#FFFFFF",
+            mutation_aspect=0.5,
+            pad=1,
+            ec="#DDDDDD",      
+            alpha=0.7
+        ),
+        #horizontalalignment="left",
+        #verticalalignment="bottom",
+        #label_pos=0.7,
+        rotate=False
     )
-
     plt.show()
     return (fig, ax)
