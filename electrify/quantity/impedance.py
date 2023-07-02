@@ -34,7 +34,7 @@ def Z_from_Y(Y: siemens) -> ohm:
 
 
 @Y.solution
-def Y_from_Z(Z: ohm) -> siemens:
+def from_Z(Z: ohm) -> siemens:
     """Get admittance in siemens from impedance in ohms."""
     return siemens(1.0 / ohm(Z))
 

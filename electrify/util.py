@@ -28,9 +28,9 @@ class ContextTimer(object):
         return time.time() - self.start
 
 
-def logfunc(logger, logLevel=logging.DEBUG):
+def logfunc(logger, log_level=logging.DEBUG, skip_self=False):
     def decorator_log(func):
-        if not logger.isEnabledFor(logLevel):
+        if not logger.isEnabledFor(log_level):
             return func
 
         @functools.wraps(func)
@@ -39,14 +39,16 @@ def logfunc(logger, logLevel=logging.DEBUG):
             wrapped.num_calls += 1
             value = func(*args, **kwargs)
             runtime = time.time() - start
+            if skip_self:
+                args = args[1:]
             full_arg_list = [
                 *[str(a) for a in args],
                 *['{}={}'.format(k, str(v)[:20]) for k, v in kwargs.items()]
             ]
-            logger.log(logLevel, 'FUNC:{: <10}|{: ^3}|{: ^10}|{}|{}'.format(
+            logger.log(log_level, 'FUNC:{: <10}[{}]  ({}) = {}'.format(
                 func.__name__,
                 wrapped.num_calls,
-                format_value(runtime),
+                #format_value(runtime),
                 ", ".join(full_arg_list),
                 str(value)
             ))

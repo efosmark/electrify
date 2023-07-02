@@ -40,7 +40,7 @@ Here, we see a type conversion from ``(volt / ohm = ampere)``
 """
 import cmath
 from functools import cache
-from typing import ClassVar, overload
+from typing import ClassVar, Optional, SupportsComplex, SupportsFloat, SupportsIndex, overload
 from typing_extensions import Self
 from .prefix import Prefix, format_prefix
 
@@ -50,30 +50,35 @@ class base_unit(complex):
 
     symbol: ClassVar[str] = ""
 
-    # def __new__(
-    #     cls,
-    #     value: Optional[complex | SupportsComplex | SupportsFloat | SupportsIndex] = None,
-    #     **kwargs,
-    # ):
-    #     if value is None and len(kwargs) > 0:
-    #         for k, v in kwargs.items():
-    #             if k in Prefix.by_name:
-    #                 value = Prefix.by_name[k](v)
-    #                 break
-    #             elif k in Prefix.by_symbol:
-    #                 value = Prefix.by_symbol[k](v)
-    #                 break
-    #     if value is None:
-    #         raise ValueError("Either a direct value or a prefixed value must be supplied.")
-    #     return super().__new__(cls, value)
+    def __new__(
+        cls,
+        value: Optional[complex | SupportsComplex | SupportsFloat | SupportsIndex] = None,
+        **kwargs,
+    ):
+        if value is None and len(kwargs) > 0:
+            for k, v in kwargs.items():
+                if k in Prefix.by_name:
+                    value = Prefix.by_name[k](v)
+                    break
+                elif k in Prefix.by_symbol:
+                    value = Prefix.by_symbol[k](v)
+                    break
+        if value is None:
+            raise ValueError("Either a direct value or a prefixed value must be supplied.")
+        return super().__new__(cls, value)
 
     def __str__(self) -> str:
         """Get the str representation of the unit."""
         return self.format()
 
+    def __gt__(self, value) -> bool:
+        if isinstance(value, (base_unit, complex)):
+            return self.magnitude > cmath.polar(value)[0]
+        return self.magnitude > value
+
     def format(self) -> str:
         """Get the formatted version of the unit."""
-        return format_prefix(self, places=2, sep=" ", unit_symbol=self.symbol)
+        return format_prefix(self, places=2, sep="", unit_symbol=self.symbol)
 
     @property
     def magnitude(self):

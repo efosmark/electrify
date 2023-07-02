@@ -5,57 +5,20 @@ This utilizes nodal analysis and the concept of superposition.
 Each source should incorporate its own targeted DAG.
 """
 from collections import defaultdict
-from typing import Any, Generic, Optional, Protocol, TypeVar, Callable
-import networkx as nx
-import cmath
+from typing import Any, Generic, Optional, TypeVar, Callable
 
-from electrify.formula.general import current_divider, get_item_impedance
+from electrify.formula import current_divider, get_item_impedance
 from electrify.value.unit import *
-from electrify.formula.sum import sum_parallel_impedance
+from electrify.value.sum import sum_parallel_impedance
 
+import networkx as nx
 
 CurrentResult = dict[Any, ampere]
 CurrentFuncType = Callable[[hertz], CurrentResult]
 ImpedanceFuncType = Callable[[hertz], ohm]
 
 
-class Valuable(Protocol):
-    """Prototype describing objects that have a value() method."""
-
-    def value(self) -> Any:
-        """Get the internal value of the object."""
-        ...
-
-
-_V = TypeVar("_V", bound=Valuable)
-
-
-# class Stack(Generic[_V]):
-#     _stack: list[_V]
-
-#     def __init__(self, initial: Optional[Sequence[_V]] = None):
-#         self._stack = []
-#         if initial is not None:
-#             self._stack.extend(initial)
-
-#     def pop(self) -> Optional[_V]:
-#         return self._stack.pop()
-
-#     def push(self, value: _V):
-#         self._stack.append(value)
-
-#     def push_all(self, iterable: Sequence[_V]):
-#         self._stack.extend(iterable)
-
-#     def __iter__(self) -> Generator[_V, None, None]:
-#         while len(self._stack) > 0:
-#             item = self.pop()
-#             if item is not None:
-#                 yield item
-
-#     def __len__(self):
-#         return len(self._stack)
-
+_V = TypeVar("_V")
 
 class DirectedGraphNode(Generic[_V]):
     """
@@ -120,25 +83,32 @@ class TargetedDAG(defaultdict[_V, DirectedGraphNode[_V]]):
                 if item in seen:
                     continue
                 seen.add(item)
-                for n in set(nx.neighbors(graph, item)) - seen:
-                    if n not in q and n not in seen:
-                        q.append(n)
-                    if side:
-                        self._connect_nodes(item, n)
-                    else:
-                        self._connect_nodes(n, item)
+                try:
+                    for n in set(nx.neighbors(graph, item)) - seen: # type: ignore
+                        if n not in q and n not in seen:
+                            q.append(n)
+                        if side:
+                            self._connect_nodes(item, n)
+                        else:
+                            self._connect_nodes(n, item)
+                except nx.NetworkXError:
+                    print('node:', item)
 
     def _connect_nodes(self, first: _V, second: _V):
         if first not in self[second].neighbors:
             self[first].successors.add(second)
             self[second].predecessors.add(first)
 
+# CurrentResult = dict[Any, ampere]
+# CurrentFuncType = Callable[[hertz], CurrentResult]
+# ImpedanceFuncType = Callable[[hertz], ohm]
 
 class SolvableDAG(TargetedDAG[_V]):
     """Representation of a targeted acyclic graph that allows for solving electric quantities."""
 
     Z_funcs: dict[_V, Callable] = {}
     I_funcs: dict[_V, Callable] = {}
+    result: dict = {}
 
     def impedance(self, frequency: hertz, item: Optional[_V] = None) -> ohm:
         """
@@ -160,7 +130,7 @@ class SolvableDAG(TargetedDAG[_V]):
             self._compute_impedance_funcs()
         return self.Z_funcs[item](frequency)
 
-    def current(self, item: _V, frequency: hertz) -> ampere:
+    def current(self, frequency: hertz, item: Optional[_V] = None) -> ampere:
         """
         Get the electric current of a given item.
 
@@ -171,9 +141,13 @@ class SolvableDAG(TargetedDAG[_V]):
         Returns:
             ampere: _description_
         """
+        if item is None:
+            item = self.source
+        if len(self.I_funcs) == 0:
+            self._compute_current_funcs()
         return self.I_funcs[item](frequency)[item]
 
-    def voltage(self, item: _V, frequency: hertz) -> volt:
+    def voltage(self, frequency: hertz, item: _V, *, reference: _V) -> volt:
         """
         Get the voltate drop found across the given item at the given frequency.
 
@@ -184,9 +158,24 @@ class SolvableDAG(TargetedDAG[_V]):
         Returns:
             volt: The voltage drop across the item.
         """
-        Z = self.impedance(frequency, item)
-        I = self.current(item, frequency)
-        return volt(Z * I)
+        # Z = self.impedance(frequency, item)
+        # I = self.current(frequency, item)
+        # return volt(Z * I)
+        stack = [reference]
+        while len(stack) > 0:
+            i = stack.pop()
+            needed = []
+            for p in self[i].predecessors:
+                if p not in self.I_funcs:
+                    needed.append(p)
+            if len(needed) > 0:
+                stack.append(i)
+                stack.extend(needed)
+                continue
+            #self.result[frequency, "volt", (item, reference)] = ###
+            #self.I_funcs[i] = self._create_If(i)
+        
+        return self.result[frequency, "volt", (item, reference)]
 
     def _compute_current_funcs(self):
         self.I_funcs = {}
@@ -232,21 +221,45 @@ class SolvableDAG(TargetedDAG[_V]):
             Z_branch = dict([(s, self.Z_funcs[s](f)) for s in self[item].successors])
             Z_load = sum_parallel_impedance(list(Z_branch.values()))
             for s in self[item].successors:
-                result[s] = current_divider(ampere(I_total), Z_branch[s], Z_load)
-                result[s] = ampere(
-                    result[s].real
-                    if cmath.isclose(result[s], result[s].real)
-                    else result[s]
-                )
-                result[s] = ampere(result[s])
+                result[s] = current_divider(ampere(I_total), Z_branch[s], Z_load).magnitude
             return result
         return __If
 
     def _create_Zf(self, item):
-
         def __Zf(frequency: hertz):
             impedance_funcs = [self.Z_funcs[s] for s in self[item].successors]
-            Z_self = get_item_impedance(item.value(), frequency)
-            Z_load = sum_parallel_impedance([i(frequency) for i in impedance_funcs])
+            item_value = item.value if hasattr(item, 'value') else item
+            Z_self = get_item_impedance(item_value, frequency)
+            Z_load = sum_parallel_impedance([i(frequency) for i in impedance_funcs]) #.magnitude
+            #if hasattr(item, 'name') and item.name == "self_impedance":
+            #    print(frequency, '|', ohm(Z_self + Z_load), '|', Z_self, '|', Z_load, '|', [i(frequency) for i in impedance_funcs])
             return ohm(Z_self + Z_load)
         return __Zf
+
+    # def _create_Vf(self, item):
+    #     def __Vf(frequency: hertz):
+            
+    
+    def to_nx_graph(self, test_f:hertz=hertz(100e3)) -> nx.DiGraph:
+        q:list[tuple[Any, int]] = [(self.source, 0)]
+        res = nx.DiGraph()
+        while len(q) > 0:
+            n, d = q.pop(0)
+            res.add_node(n)
+            res.nodes[n]["layer"] = d
+            res.nodes[n]["z"] = self.impedance(test_f, n)
+            res.nodes[n]["i"] = self.current(test_f, n)
+            #res.nodes[n]["v"] = self.voltage(test_f, n)
+            for m in self[n].successors:
+                try:
+                   current = self.current(test_f, m)
+                except KeyError:
+                   current = self.current(test_f, n)
+                res.add_edge(
+                    n,
+                    m,
+                    z=self.impedance(test_f, m),
+                    i=current
+                )
+                q.append((m, d-1))
+        return res

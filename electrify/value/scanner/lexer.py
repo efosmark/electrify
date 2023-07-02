@@ -46,7 +46,6 @@ class Lexer:
         self._last = ""
 
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.DEBUG)
 
     def pop(self) -> str:
         """
@@ -67,7 +66,7 @@ class Lexer:
 
         Parameters
         ----------
-         * `value: str` — The value to be appended to the character buffer
+        value (str): The value to be appended to the character buffer
         """
         self._value.append(value)
 
@@ -112,7 +111,7 @@ class Lexer:
         """
         return len(self._value) > 0
 
-    def scan_all(self) -> tuple[tokens.LexicalToken]:
+    def scan_all(self) -> tuple:
         """
         Scan all of the characters in the buffer, and return a tuple of tokens.
 

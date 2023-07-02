@@ -5,6 +5,11 @@ import math
 # Measured in coulombs.
 ELEMENTARY_CHARGE = 1.602176634e-19
 
+# The speed of light in a vacuum, measured in meters per second (m/s).
+SPEED_OF_LIGHT = c = 299792458.0
+
+# Boltzmann constant (k_B) as a measure in joules per kelvin (J/K)
+BOLTZMANN_CONSTANT = 1.380649e-23
 
 # Effective impedances
 OPEN_CIRCUIT = math.inf
@@ -142,4 +147,32 @@ COLOR_CODES = {
     "white": WHITE,
     "gold": GOLD,
     "silver": SILVER
+}
+
+
+
+BUTTERWORTH_COEF_MAX_FLAT = {
+    1: [2.0000],
+    2: [1.414, 1.414],
+    3: [1, 2, 1],
+    4: [0.7654, 1.85, 1.85, 0.7654],
+    5: [0.618, 1.618, 2, 1.618, 0.618],
+    6: [0.5176, 1.414, 1.932, 1.932, 1.1414, 0.5176],
+    7: [0.445, 1.247, 1.802, 2, 1.802, 1.247, 0.445],
+    8: [0.3902, 1.1111, 1.6629, 1.9615, 1.9615, 1.6629, 1.1111, 0.3902],
+    9: [0.3473, 1.0, 1.5321, 1.8794, 2.0, 1.897, 1.5321, 1.0, 0.3473],
+    10: [0.3129, 0.9080, 1.4142, 1.7820, 1.9754, 1.9754, 1.7820, 1.4142, 0.9080, 0.3129]
+}
+
+BUTTERWORTH_COEF_LINEAR_PHASE = {
+    1: [],
+    2: [],
+    3: [],
+    4: [],
+    5: [],
+    6: [],
+    7: [],
+    8: [],
+    9: [],
+    10: []
 }

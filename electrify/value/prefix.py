@@ -122,7 +122,7 @@ def format_prefix(x: float | complex, places: int = 2, sep: str = '', unit_symbo
         places (int, optional): Maximum number of decimal places to show. Defaults to 2.
         sep (str, optional): Separation between value and prefix. Defaults to ''.
         unit_symbol (str, optional): If a specific unit is being formatted, its symbol can be 
-                                     applied directly. Defaults to ''.
+        applied directly. Defaults to ''.
 
     Returns:
         str: Formatted numeric value with magnitude prefixes applied.
@@ -132,10 +132,10 @@ def format_prefix(x: float | complex, places: int = 2, sep: str = '', unit_symbo
         '999k'
 
         >>> format_prefix(complex(1.87e6, -22e-10))
-        '1.87M - [2.2j]n'
+        '1.87M - 2.2jn'
 
         >>> format_prefix(complex(4.7e3, -22e-10), unit_symbol="Ω")
-        '4.7kΩ - [2.2j]nΩ'
+        '4.7kΩ - 2.2jnΩ'
 
         >>> format_prefix(6.8e-6, unit_symbol="F")
         '6.8µF'

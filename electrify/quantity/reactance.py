@@ -1,4 +1,4 @@
-import cmath
+import cmath, math
 from typing import Optional, overload
 from ..value.unit import *
 from .quantity import Quantity
@@ -8,23 +8,23 @@ B = susceptance = Quantity[siemens]("B", "susceptance")
 
 
 @X.solution
-def get_capacitive_reactance(f: hertz, C: farad, imag=False) -> ohm:
+def get_capacitive_reactance(f: hertz, C: farad) -> ohm:
     """Get reactance in ohms from frequency in hertz and capacitance in farads."""
     if f == 0:
         return ohm(cmath.inf)
     elif C == 0:
         return ohm(0)
-    return ohm(1.0 / (2.0 * cmath.pi * hertz(f) * farad(C)) * (1j if imag else 1))
+    return ohm(1.0 / (2.0 * math.pi * hertz(f) * farad(C)) * -1j)
 
 
 @X.solution
-def get_inductive_reactance(f: hertz, L: henry, imag=False) -> ohm:
+def get_inductive_reactance(f: hertz, L: henry) -> ohm:
     """Get reactance in ohms from frequency in hertz and inductance in henrys."""
     if f == 0:
         return ohm(0)
     elif L == 0:
         return ohm(cmath.inf)
-    return ohm(2.0 * cmath.pi * hertz(f) * henry(L) * (1j if imag else 1))
+    return ohm(2.0 * math.pi * hertz(f) * henry(L) * 1j)
 
 
 @X.solution

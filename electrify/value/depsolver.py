@@ -1,6 +1,9 @@
 """
+Dependency-solving tools.
 
-
+Given a series of functions representing solutions, this will search for which function(s) can be
+solved with the input variables. It will resolve in a cascade-style if a dependency of a dependency
+can be resolved.
 """
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
@@ -119,6 +122,7 @@ class BFS_DependencySolver(DependencySolver[_UT]):
 
 
 class DFS_DependencySolver(DependencySolver[_UT]):
+    """A depth-first-search dependency solver."""
 
     def solve(self, target: str, **known_values):
         """Attempt to solve for the target based on the provided known values."""

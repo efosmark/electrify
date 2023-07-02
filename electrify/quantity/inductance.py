@@ -72,8 +72,8 @@ def from_toroid(num_turns: float, permeability_or_index: float) -> henry: ...
 def from_toroid(
     num_turns: float,
     permeability_or_index: float,
-    cross_section_core_area: Optional[float] = None,
-    effective_core_length: Optional[float] = None
+    cross_section_core_area: float,
+    effective_core_length: float
 ) -> henry: ...
 
 
@@ -83,12 +83,13 @@ def from_toroid(
     cross_section_core_area: Optional[float] = None,
     effective_core_length: Optional[float] = None
 ) -> henry:
-    """ Inductance of a toroidal-core winding in nano-henerys.
+    """
+    Inductance of a toroidal-core winding in nano-henerys.
 
     num_turns - Number of turns
     initial_permeability - Initial permeability
     cross_section_core_area - Cross-sectional area of the core in cm**2
-    effective    A   e_core_length - Effective length of the core in cm
+    effective_core_length - Effective length of the core in cm
     """
     if cross_section_core_area and effective_core_length:
         return henry((0.4 * cmath.pi * num_turns ** 2 * permeability_or_index *
@@ -97,7 +98,8 @@ def from_toroid(
 
 
 def from_toroid_with_index(num_turns, inductance_index):
-    """ Inductance of a toroidal-core winding in nano-henrys.
+    """
+    Inductance of a toroidal-core winding in nano-henrys.
 
     num_turns - Number of turns
     inductance_index - Inductive index in nano-henrys / turn**2 (A_L)
@@ -105,6 +107,6 @@ def from_toroid_with_index(num_turns, inductance_index):
 
 
 def from_straight_wire(wire_length_mm: float, diameter_mm: float) -> henry:
-    """pp 29"""
+    """pp 29."""
     return henry(0.129 * wire_length_mm *
                  (2.303 * cmath.log10((4.0 * wire_length_mm) / diameter_mm) - 0.75))

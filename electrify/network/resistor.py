@@ -1,5 +1,5 @@
 """A single-port model of a physical resistor."""
-from typing import Optional, Final
+from typing import Optional
 
 from .network import OnePortNetwork, Property
 from ..value.unit import *
@@ -7,8 +7,6 @@ from ..value.unit import *
 
 class Resistor(OnePortNetwork):
     """Physical representation of a resistor as a single-port network."""
-
-    num_poles: Final[int] = 2
 
     resistance: Property[ohm]
     body_capacitance: Property[farad]
@@ -52,17 +50,17 @@ class Resistor(OnePortNetwork):
         pole_A = +self.port(1)
         pole_B = -self.port(1)
 
-        if self.interlead_capacitance.value() is not None:
+        if self.interlead_capacitance.value is not None:
             self.add_series([pole_A, self.interlead_capacitance, pole_B])
 
-        if self.lead_inductance_A.value() is not None:
+        if self.lead_inductance_A.value is not None:
             pole_A = self.add_series([pole_A, self.lead_inductance_A])
             pole_B = self.add_series([pole_B, self.lead_inductance_B])
 
-        if self.body_capacitance.value() is not None:
+        if self.body_capacitance.value is not None:
             self.add_parallel([self.body_capacitance], start=pole_A, end=pole_B)
 
-        if self.internal_inductance.value() is not None:
+        if self.internal_inductance.value is not None:
             self.add_series([pole_A, self.internal_inductance, self.resistance, pole_B])
         else:
             self.add_series([pole_A, self.resistance, pole_B])
