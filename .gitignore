@@ -3,7 +3,6 @@
 *.swp
 __pycache__
 env/
-.history
 *.egg-info
 .mypy_cache
 .pytest_cache
