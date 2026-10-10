@@ -151,7 +151,7 @@ COLOR_CODES = {
 
 
 
-BUTTERWORTH_COEF_MAX_FLAT = {
+BUTTERWORTH_COEF_MAX_FLAT:dict[int, list[float]] = {
     1: [2.0000],
     2: [1.414, 1.414],
     3: [1, 2, 1],
@@ -164,7 +164,7 @@ BUTTERWORTH_COEF_MAX_FLAT = {
     10: [0.3129, 0.9080, 1.4142, 1.7820, 1.9754, 1.9754, 1.7820, 1.4142, 0.9080, 0.3129]
 }
 
-BUTTERWORTH_COEF_LINEAR_PHASE = {
+BUTTERWORTH_COEF_LINEAR_PHASE:dict[int, list[float]] = {
     1: [],
     2: [],
     3: [],

@@ -1,0 +1,5 @@
+{
+    "python.linting.enabled": true,
+    "mypy-type-checker.cwd": "${workspaceFolder}/electrify/",
+    "cmake.configureOnOpen": false
+}

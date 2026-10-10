@@ -1,0 +1,12 @@
+
+# test
+set number x := 100 pF
+set text mesg := "hello"
+
+
+out x
+out (22pF + 33pF)
+
+# test 2
+
+            

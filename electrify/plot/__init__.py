@@ -1,5 +1,5 @@
 from . import drawcircuit
-from .ivcurve import IVCurvePlotManager
+from .ivcurve import IVCurvePlot2D
 from .bode import BodePlotManager
 from .dblocator import DbLocator
 
@@ -11,4 +11,4 @@ def get_domain(min, max, num_steps, max_inclusive=True) -> list:
         domain.append(max)
     return domain
 
-__ALL__ = [drawcircuit, IVCurvePlotManager, BodePlotManager, DbLocator, get_domain]
+__ALL__ = [drawcircuit, BodePlotManager, DbLocator, get_domain]

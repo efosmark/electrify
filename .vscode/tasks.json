@@ -14,7 +14,7 @@
                 "showReuseMessage": false,
                 "clear": false
             },
-            "command": "~/.venv/project-electrify/bin/pip install -e .",
+            "command": "pip install -e .",
             "options": {
                 "statusbar": {
                     "label": "$(terminal) Install Self"
@@ -28,7 +28,7 @@
                 "showReuseMessage": false,
                 "clear": true
             },
-            "command": "~/.venv/project-electrify/bin/pip install --no-cache-dir -r ./requirements.txt",
+            "command": "pip install --no-cache-dir -r ./requirements.txt",
             "options": {
                 "statusbar": {
                     "label": "$(terminal) Install Reqs"

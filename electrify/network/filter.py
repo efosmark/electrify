@@ -1,9 +1,21 @@
-import cmath
+import math
 from typing import Optional
+from electrify.ac import hz_center_from_bw, magnitude
+from electrify.network.net import Edge, Net, Side
+from electrify.types import *
 from electrify.constants import BUTTERWORTH_COEF_MAX_FLAT
-from electrify.network.property import Capacitance, Inductance, Resistance
-from electrify.value.unit import *
-from .network import NegativePole, Property, TwoPortNetwork
+from electrify.component import C, L
+from .network import TwoPortNetwork
+
+
+def butterworth_shunt_value(num_elements:int, n:int, cutoff:hertz, z0:ohm=ohm(50)) -> float:
+    coef = BUTTERWORTH_COEF_MAX_FLAT[num_elements][n]
+    return magnitude(coef / z0 / (2 * math.pi * cutoff))
+
+def butterworth_series_value(num_elements:int, n:int, cutoff:hertz, z0:ohm=ohm(50)) -> float:
+    coef = BUTTERWORTH_COEF_MAX_FLAT[num_elements][n]
+    return magnitude((coef * z0) / (2 * math.pi * cutoff))
+
 
 
 class LowPassFilter(TwoPortNetwork):
@@ -11,95 +23,95 @@ class LowPassFilter(TwoPortNetwork):
         self,
         cutoff: hertz,
         num_elements: int,
-        characteristic_impedance:ohm = ohm(50),
-        com: Optional[NegativePole] = None
+        characteristic_impedance:ohm = ohm(50)
     ):
         TwoPortNetwork.__init__(self)
-        if com is not None:
-            self.port(1).neg = com 
         self.cutoff = cutoff
         self.num_elements = num_elements
         self.characteristic_impedance = characteristic_impedance
+        self.ground = Edge(self.ports[1], Side.B)
         self._build_network()
-
+    
     def _build_network(self):
-        self.com = Property[None](None, "GND")
+        p1, p2 = self.ports[1], self.ports[2]
         
-        p1 = self.port(1)
-        p2 = self.port(2)
-        
-        self.add_edge(p2.neg, p1.neg)
-        
-        source_resistance = Resistance(ohm(50))
-        self.add_edge(p1.pos, source_resistance)
-        prev = source_resistance
+        self.connect(p2.neg, p1.neg)
+        prev = Edge(p1, Side.A)
 
-        for i, val in enumerate(BUTTERWORTH_COEF_MAX_FLAT[self.num_elements]):
+        for i in range(self.num_elements):
             if i % 2 == 0:
-                C = val / self.characteristic_impedance / (2 * cmath.pi * self.cutoff)
-                cap = Capacitance(farad(C))
-                self.add_series([prev, cap, p1.neg])
+                cap = C(butterworth_shunt_value(self.num_elements, i, self.cutoff))
+                self.connect(prev, cap)
+                self.connect(cap, self.ground)
             else:
-                L = (val * self.characteristic_impedance) / (2 * cmath.pi * self.cutoff)
-                ind = Inductance(henry(L))
-                self.add_series([prev, ind])
-                prev = ind
-        self.add_edge(prev, p2.pos)
+                ind = L(butterworth_series_value(self.num_elements, i, self.cutoff))
+                self.connect(prev, ind)
+                prev = Edge(ind, Side.B)
+        self.connect(prev, p2.pos)
         
 
-# class HighPassFilter(SubCircuit):
+class HighPassFilter(TwoPortNetwork):
+    def __init__(
+        self,
+        cutoff: hertz,
+        num_elements: int,
+        characteristic_impedance:ohm = ohm(50)
+    ):
+        TwoPortNetwork.__init__(self)
+        self.cutoff = cutoff
+        self.num_elements = num_elements
+        self.characteristic_impedance = characteristic_impedance
+        self.ground = Edge(self.ports[1], Side.B)
+        self._build_network()
+    
+    def _build_network(self):
+        p1, p2 = self.ports[1], self.ports[2]
+        
+        self.connect(p2.neg, p1.neg)
+        prev = Edge(p1, Side.A)
 
-#     def __init__(self, cutoffFrequency, num=5, R0=50, seriesFirst=False, name=None):
-#         if name is None:
-#             name = "HPF_"+str(hex(id(self)))[-4:]
-#         SubCircuit.__init__(self, name=name)
-#         self._numComponents = num
-#         self._characteristicImpedance = R0
-#         self._cutoffFrequency = cutoffFrequency
+        for i in range(self.num_elements):
+            val = BUTTERWORTH_COEF_MAX_FLAT[self.num_elements][i]
 
-#         for i, val in enumerate(BUTTERWORTH_COEF_MAX_FLAT[num]):
-#             L = val * R0
-#             C = val / R0
-#             if i % 2 == int(seriesFirst):
-#                 self.series(Capacitor(1 / (L * 2 * np.pi * cutoffFrequency)))
-#             else:
-#                 self.shunt(Inductor(1 / (C * 2 * np.pi * cutoffFrequency)))
-#         # self.end()
+            if i % 2 == 0:
+                ind = L(magnitude(1 / ((val / self.characteristic_impedance) * 2 * math.pi * self.cutoff)))
+                self.connect(prev, ind)
+                self.connect(ind, self.ground)
+            else:
+                cap = C(magnitude(1 / ((val * self.characteristic_impedance) * 2 * math.pi * self.cutoff)))
+                self.connect(prev, cap)
+                prev = Edge(cap, Side.B)
+        self.connect(prev, p2.pos)
 
 
-# class BandPassFilter(SubCircuit):
+class BandPassFilter(TwoPortNetwork):
 
-#     def __init__(self, upper, lower, num=5, R0=50, seriesFirst=False, name=None):
-#         if name is None:
-#             name = "BPF_"+str(hex(id(self)))[-4:]
-#         SubCircuit.__init__(self, name=name)
-#         upper = upper * 2 * np.pi
-#         lower = lower * 2 * np.pi
+    def __init__(self, upper, lower, num_elements=5, R0=ohm(50)):
+        super().__init__()
+        upper = upper * 2 * math.pi
+        lower = lower * 2 * math.pi
 
-#         self._numComponents = num
-#         self._characteristicImpedance = R0
-#         self._centerFrequency = f0_from_bandwidth(lower, upper)
-#         self._bandwidth = upper - lower
+        self.ground = Edge(self.ports[1], Side.B)
+        self.num_elements = num_elements
+        self.characteristic_impedance = R0
+        self.center_frequency = hz_center_from_bw(lower, upper)
+        self.bandwidth = upper - lower
 
-#         for i, val in enumerate(BUTTERWORTH_COEF_MAX_FLAT[num]):
-#             L = val * R0
-#             C = val / R0
-#             if i % 2 == int(seriesFirst):
-#                 self.series(
-#                     Inductor(L / self._bandwidth),
-#                     Capacitor(self._bandwidth / (self._centerFrequency**2 * L))
-#                 )
-#             else:
-#                 self.shunt(Capacitor(C / self._bandwidth))
-#                 self.shunt(Inductor(self._bandwidth /
-#                            (self._centerFrequency**2 * C)))
-#         # self.end()
+        p1, p2 = self.ports[1], self.ports[2]
+        self.connect(p2.neg, p1.neg)
+        prev = Edge(p1, Side.A)
+        
+        for i, val in enumerate(BUTTERWORTH_COEF_MAX_FLAT[num_elements]):
+            if i % 2 == 0:
+                ind = L((val * R0) / self.bandwidth)
+                cap = C(self.bandwidth / (self.center_frequency**2 * (val / R0)))
+                prev = Edge(self.series(prev, ind, cap), Side.B)
+            else:
+                cap = C((val * R0) / self.bandwidth)
+                ind = L(self.bandwidth / (self.center_frequency**2 * (val / R0)))
+                self.series(cap, self.ground)
+                self.series(ind, self.ground)
 
-#     def bandwidth(self):
-#         return self._bandwidth
-
-#     def centerFrequency(self):
-#         return self._centerFrequency
 
 
 # class BandStopFilter(SubCircuit):

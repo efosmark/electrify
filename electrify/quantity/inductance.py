@@ -1,38 +1,23 @@
 import cmath
 from typing import Optional, overload
-from ..value.unit import *
-from .quantity import Quantity
+from ..types import *
 
-
-L = inductance = Quantity[henry]("L", "inductance")
-
-
-@L.solution
 def from_tR(t: second, R: ohm) -> henry:
     """Get inductance in henrys from time in seconds and resistance in ohms."""
     return henry(second(t) * ohm(R))
 
-
-@L.solution
 def from_fX(f: hertz, X: ohm) -> henry:
     """Get capacitance in farads from frequency in ohms and inductance in ohms."""
-    f, X = hertz(f), ohm(X)
     return henry(2.0 * cmath.pi * hertz(f) * ohm(X))
 
-
-@L.solution
 def from_IU(I: ampere, U: weber) -> henry:
     """Get inductance in henrys from electric current in amperes and magnetic flux in webers."""
     return henry(weber(U) / ampere(I))
 
-
-@L.solution
 def from_IE(I: ampere, E: joule) -> henry:
     """Get inductance in henrys from electric current in amperes and energy in joules."""
     return henry(joule(E) / ampere(I)**2)
 
-
-@L.solution
 def at_resonance(f: hertz, C: farad) -> henry:
     """
     Get the inductance in henrys from a known resonant circuit.
@@ -57,11 +42,9 @@ def get_inductance(*, I: ampere, U: weber) -> henry: ...
 def get_inductance(*, I: ampere, E: joule) -> henry: ...
 @overload
 def get_inductance(*, f: hertz, C: farad) -> henry: ...
-
-
-def get_inductance(**kwargs: base_unit | complex | float) -> henry:
+def get_inductance(**kwargs: ElectricUnit | complex | float) -> henry:
     """Calculate the inductance in ohms based on the quantities supplied."""
-    return L.get(**kwargs)
+    ...
 
 
 @overload

@@ -1,11 +1,10 @@
 import doctest
-
 import electrify
 
 
 modules = [
     electrify.value,
-    electrify.value.unit,
+    electrify.value.unit1,
     electrify.value.prefix,
     electrify.value.scanner,
     electrify.value.scanner.lexer,

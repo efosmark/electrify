@@ -2,17 +2,12 @@ import cmath
 from typing import overload
 
 from ..constants import SPEED_OF_LIGHT
-from ..value.unit import *
-from .quantity import Quantity
+from ..types import *
 
-wavelength = Quantity[metre]("λ", "wavelength")
-
-@wavelength.solution
 def from_t(t: second) -> metre:
     """Get frequency in hertz from time in seconds."""
     return metre(1.0 / t / SPEED_OF_LIGHT)
 
-@wavelength.solution
 def from_frequency(frequency: hertz) -> metre:
     """
     Given a frequency measured in hertz, get the wavelength (λ) in metres.
@@ -29,8 +24,7 @@ def from_frequency(frequency: hertz) -> metre:
     """
     return metre(frequency / SPEED_OF_LIGHT)
 
-@wavelength.solution
-def from_angular_f(angular_f: RadPerSecond) -> metre:
+def from_angular_f(angular_f: rad_per_sec) -> metre:
     """
     Given an angular frequency (ω) measured in rad/s, get the wavelength (λ) in metres.
     
@@ -49,8 +43,8 @@ def get_wavelength(*, t: second) -> metre: ...
 @overload
 def get_wavelength(*, f: hertz) -> metre: ...
 @overload
-def get_wavelength(*, angular_f: RadPerSecond) -> metre: ...
+def get_wavelength(*, angular_f: rad_per_sec) -> metre: ...
 
-def get_wavelength(**kwargs: base_unit | complex | float) -> metre:
+def get_wavelength(**kwargs: ElectricUnit | complex | float) -> metre:
     """Calculate the wavelength in metres based on the quantities supplied."""
-    return wavelength.get(**kwargs)
+    ...

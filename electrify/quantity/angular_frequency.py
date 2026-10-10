@@ -1,31 +1,25 @@
 from typing import overload
 
 from ..constants import SPEED_OF_LIGHT
-from ..value.unit import *
-from .quantity import Quantity
+from ..types import *
 
-angular_frequency = Quantity[RadPerSecond]("ω", "angular_frequency")
-
-@angular_frequency.solution
-def from_t(t: second) -> RadPerSecond:
+def from_t(t: second) -> rad_per_sec:
     """Get angular frequency in rad/s from time in seconds."""
-    return RadPerSecond()
+    return rad_per_sec()
 
-@angular_frequency.solution
-def from_frequency(frequency: hertz) -> RadPerSecond:
-    return RadPerSecond(frequency / SPEED_OF_LIGHT)
+def from_frequency(frequency: hertz) -> rad_per_sec:
+    return rad_per_sec(frequency / SPEED_OF_LIGHT)
 
-@angular_frequency.solution
-def from_wavelength(wavelength: metre) -> RadPerSecond:
-  pass
+# @angular_frequency.solution
+# def from_wavelength(wavelength: metre) -> RadPerSecond:
+#   ...
 
 @overload
-def get_angular_frequency(*, t: second) -> RadPerSecond: ...
+def get_angular_frequency(*, t: second) -> rad_per_sec: ...
 @overload
-def get_angular_frequency(*, wavelength: metre) -> RadPerSecond: ...
+def get_angular_frequency(*, wavelength: metre) -> rad_per_sec: ...
 @overload
-def get_angular_frequency(*, frequency: hertz) -> RadPerSecond: ...
-
-def get_angular_frequency(**kwargs: base_unit | complex | float) -> RadPerSecond:
+def get_angular_frequency(*, frequency: hertz) -> rad_per_sec: ...
+def get_angular_frequency(**kwargs: ElectricUnit | complex | float) -> rad_per_sec:
     """Calculate the angular frequency (ω) in rad/s based on the quantities supplied."""
-    return angular_frequency.get(**kwargs)
+    ...

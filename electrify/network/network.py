@@ -1,210 +1,139 @@
-"""
-The base classes for multi-port networks.
+import math
+from typing import *
+from electrify.dc import SupportsImpedance
+from electrify.util import StackLogger
+from electrify.types import *
+from .net import Edge, Net, NetList, Side, VirtualItem
 
-Available variants are:
+stack_logger = StackLogger(compact=True)
 
- - `OnePortNetwork`
- - `TwoPortNetwork`
+class Port(VirtualItem):
+    network:'PortNetwork'
+    id:int|str
 
-Beyond that, a custom multi-port network can be created by subclassing either of those
-variants, or by subclassing `PortNetwork` and specifying the number of ports directly.
-"""
-from typing import Callable, ClassVar, Sequence, TypeVar
-import networkx as nx
+    def __init__(self, network:'PortNetwork', id:int|str):
+        self.network = network
+        self.id = id
 
-#from electrify.network.solution import Z_Solution
-
-from .dag import SolvableDAG
-from .property import *
-from .port import Port
-from ..value.unit import *
-
-
-_T = TypeVar("_T")
-_U = TypeVar("_U")
-
-
-ImpedanceCallable = Callable[[hertz], ohm]
-CurrentCallable = Callable[[hertz], ampere]
-VoltageCallable = Callable[[hertz], volt]
+    @property
+    def pos(self) -> Edge[Self]:
+        return Edge(self, Side.A)
+    
+    @property
+    def neg(self) -> Edge[Self]:
+        return Edge(self, Side.B)
+    
+    def impedance(self, frequency:hertz) -> ohm:
+        return ohm(math.inf)
+    
+    def __repr__(self):
+        return f'Port({self.network}, {self.id})'
 
 
-class PortNetwork(nx.Graph):
-    """
-    An abstract representation of a port network.
-
-    When subclassing, the `num_ports` class variable must be specified, and equal
-    to the number of ports that comprises the network. The ports will be automatically
-    created during the initialization of the network, and will be available at ``<instance>.ports``.
-    """
-
+class PortNetwork(NetList[SupportsImpedance]):
+    allow_compose: ClassVar[bool] = True
     num_ports: ClassVar[int]
-    ports: dict[int|str, Port]
-    solutions: dict[tuple, SolvableDAG]
-    Z_solutions: dict[tuple, Any]
+    ports: Dict[int|str, Port]
 
     def __init__(self):
-        """Create a new port network with the number of ports equal to cls.num_ports."""
-        nx.Graph.__init__(self)
-        self.solutions = {}
-        self._init_ports()
-
-    def _init_ports(self):
+        super().__init__()
         self.ports = {}
-        for i in range(self.num_ports):
-            port_id = i + 1
-            new_port = Port(self, port_id)
-            self.ports[port_id] = new_port
-
-    def __repr__(self):
-        return f'{self.__class__.__name__}(num_ports={self.num_ports})'
+        for i in range(1, self.num_ports + 1):
+            p = Port(self, i)
+            self.ports[i] = p
+            self.add(p, Side.A)
+            self.add(p, Side.B)
 
     def __str__(self):
-        return f'<{self.__repr__()} at {hex(id(self))}>'
+        return f'<{self.__class__.__name__}>'
+
+    def _resolve_net(self, p1:SupportsImpedance|Edge, side:Side, compose:bool) -> Net:
+        if isinstance(p1, OnePortNetwork) and compose:
+            self.import_netlist(p1)
+            p1 = p1.get_pole(side)
+        if not isinstance(p1, Edge):
+            p1 = Edge(p1, side)
+        return self.net_from_edge(p1)
+
+    def connect(self, p1:SupportsImpedance|Edge, p2:SupportsImpedance|Edge, compose:bool=True):
+        net1 = self._resolve_net(p1, Side.B, compose)
+        net2 = self._resolve_net(p2, Side.A, compose)
+        self.combine_nets(net1, net2)
     
-    def __getitem__(self, port_id: int|str):
-        return self.ports[port_id]
-
-    def port(self, port_id: int) -> Port:
-        """
-        Get the port with the given ID.
-
-        Args:
-            port_id (int): _description_
-
-        Returns:
-            Port: _description_
-        """
-        return self.ports[port_id]
-
-    def add_parallel(self, items: Sequence[_U], *, start: _U, end: _U) -> _U:
-        """
-        When building the network, this allows for adding several items in parallel.
-
-        Args:
-            items (Sequence[_U]): _description_
-            start (_U): _description_
-            end (_U): _description_
-
-        Returns:
-            _U: _description_
-        """
-        for itm in items:
-            self.add_edge(start, itm)
-            self.add_edge(itm, end)
-        return end
-
-    def add_series(self, items: Sequence[_U]) -> _U:
-        """
-        Wehn building the network, this allows for adding several items in series.
-
-        Args:
-            items (Sequence[_U]): _description_
-
-        Returns:
-            _U: _description_
-        """
-        for itm_A, itm_B in zip(items, items[1:]):
-            self.add_edge(itm_A, itm_B)
-        return items[-1]
-        
-    def _superposition_indices(self) -> list[tuple[int|str, int|str]]:
-        result = []
-        port_ids = self.ports.keys()
-        for p1 in port_ids:
-            result.extend([(p1, p2) for p2 in port_ids])
+    def series(self, *items):
+        last = None
+        for c1, c2 in zip(items, items[1:]):
+            self.connect(c1, c2)
+            last = c2
+        return last
+    
+    def paths_between(self, start_ref:Net, end_ref:Net) -> set[tuple]:
+        """Get all acyclic paths between the two refs."""
+        result = set()
+        paths:list[list[SupportsImpedance|Net]] = [[start_ref]]
+        while len(paths) > 0:
+            path = paths.pop(0)
+            node = path[-1]
+            if isinstance(node, Port):
+                continue
+            elif node is end_ref:
+                result.add(tuple(path))
+                continue
+            elif isinstance(node, Net):
+                for prop, side in node.edges:
+                    if isinstance(prop, Port) or (prop, side) in path:
+                        continue
+                    paths.append([*path, prop])
+            elif isinstance(node, SupportsImpedance):
+                net_A = self.get_net(node, Side.A)
+                if net_A not in path:
+                    paths.append([*path, net_A])
+                net_B = self.get_net(node, Side.B)
+                if net_B not in path:
+                    paths.append([*path, net_B])
+            else:
+                raise Exception(f'unknown type for {node}')
         return result
-
-    def get_dag_solution(self, src: int | Port, target: int | Port) -> SolvableDAG:
-        if isinstance(src, int):
-            src = self.ports[src]
-        if isinstance(target, int):
-            target = self.ports[target]
-        if (src, target) not in self.solutions:
-            self.solutions[(src, target)] = SolvableDAG(
-                self,
-                +src,
-                -target
-            )
-        return self.solutions[(src, target)]
-
-    # def z_parameter(self, src: int | Port, targ: int | Port) -> ImpedanceCallable:
-    #     """Get a function that, given a frequency, will return the impedance between the ports."""
-    #     return self.get_dag_solution(src, targ).impedance
-
-    # def z(self, src: int | Port, target: int | Port, frequency: hertz) -> ohm:
-    #     """
-    #     Get the impedance between two ports at a given frequency.
-
-    #     Args:
-    #         src (int | Port): Either the port ID or the port instance for the source.
-    #         target (int | Port): Either the port ID or the port instance for the source.
-    #         frequency (hertz): Frequency at which we want to determine the impedance.
-
-    #     Returns:
-    #         ohm: The (potentially comlex) impedance.
-    #     """
-    #     param = self.z_parameter(src, target)
-    #     return param(frequency)
-    
-    
-    #def Z(self, port1: Port, port2: Port, frequency: hertz) -> ohm:
-    #    if (port1, port2) not in self.solutions:
-    #        self.Z_solutions[(port1,port2)] = self.solve_for(port1, port2)
-        
-    
-    #def solve_for(self, port1: Port, port2: Port) -> Any:
-    #    pass
-    
-    # def _compute_impedances(source, target):
-        
-        
-
-    # def analyze_open_circuit(self):
-    #     """
-
-    #     Compute the Z-parameter linear equations with the non-source ports
-    #     configured with open-circuit conditions.
-    #     """
-
-    # def analyze_short_circuit(self):
-    #     """
-
-    #     Compute the Y-parameter linear equations with the non-source ports
-    #     configured with closed-circuit conditions.
-    #     """
-
-    # @property
-    # @cache
-    # def Z_matrix(self): pass  # -> dict[tuple, Callable[[hertz], ohm]]:
-    # matrix = {}
-    # for (p1, p2) in self.superposition_indices():
-    #     matrix[p1, p2] = self.Z_parameter(self.port(p1), self.port(p2))
-    # return matrix
 
 
 class OnePortNetwork(PortNetwork):
-    """Representation of a single-port network that has one positive and one negative pole."""
-
     num_ports: ClassVar[int] = 1
+    
+    def get_pole(self, side:Side) -> Edge:
+        return Edge(self.ports[1], side)
+    
+    def impedance(self, frequency: hertz) -> ohm:
+        # TODO: impedance between +p1 and -p1
+        return ohm(math.inf)
 
-    #def impedance(self, frequency: hertz) -> ohm:
-    #    """Get the total impedance of the network between port.pos and port.neg."""
-    #    return self.z(1, 1, frequency)
+
+class Series(OnePortNetwork):
+    
+    def __init__(self, *args, **kwargs):
+        OnePortNetwork.__init__(self)
+        compose = kwargs.get("compose", True)
+        items = [
+            self.get_pole(Side.A),
+            *args,
+            self.get_pole(Side.B)
+        ]
+        for a,b in zip(items, items[1:]):
+            self.connect(a, b, compose)
+
+
+# class Parallel(OnePortNetwork):
+    
+#     def __init__(self, *args:Connectable, **kwargs):
+#         OnePortNetwork.__init__(self)
+#         compose = kwargs.get("compose", True)
+#         A_pole = self.get_pole(Side.A)
+#         B_pole = self.get_pole(Side.B)
+#         for a in args:
+#             self.connect(A_pole, a, compose)
+#             self.connect(a, B_pole, compose)
 
 
 class TwoPortNetwork(PortNetwork):
-    """
-    Representation of a network that comprises two ports.
-
-    Two-port networks have some 'special' features, such as being able to compute
-    the ABCD parameters, the s-parameters, and the h-parameters.
-    """
-
     num_ports: ClassVar[int] = 2
 
-    #def ABCD(self): ...
-
-    #def s(self, port_A, port_B): ...
-
-    #def is_reciprocal(self): ...
+    def cascade(self):...

@@ -1,9 +1,9 @@
 
-from electrify.formula import attenuation_factor, voltage_divider
+from electrify.dc import attenuation_factor, voltage_divider
 from electrify.quantity.reactance import get_capacitive_reactance, get_inductive_reactance
 from electrify.value import from_string, hertz, farad, henry, volt
 from electrify.value.sum import sum_parallel_resistance, sum_series_resistance
-from electrify.value.prefix import pico, nano
+from electrify.prefix import pico, nano
 from electrify.plot import BodePlotManager, get_domain
 import matplotlib.pyplot as plt
 
@@ -81,7 +81,7 @@ def circuit(f):
     # print(f'ZR1 = {str(ZR1): <13} ZR2 = {str(ZR2): <13} ZR3 = {str(ZR3): <13}')
     # print(f' V1 = {str(volt(V1.magnitude)): <13}  V2 = {str(volt(V2.magnitude)): <13}  V3 = {str(volt(V3.magnitude)): <10}')
 
-    return 10.0 * (cmath.log10((V3)**2.0))
+    return V3- V1
 
 
 x_data = get_domain(f_min, f_max, f_samples)
@@ -105,3 +105,4 @@ bpm.configure(
 )
 bpm.plot_fq(y_data)
 plt.show()
+print(y_data)
