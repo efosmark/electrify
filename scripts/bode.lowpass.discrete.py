@@ -1,22 +1,22 @@
-
-from electrify.dc import attenuation_factor, voltage_divider
-from electrify.quantity.reactance import get_capacitive_reactance, get_inductive_reactance
-from electrify.value import from_string, hertz, farad, henry, volt
-from electrify.value.sum import sum_parallel_resistance, sum_series_resistance
-from electrify.prefix import pico, nano
-from electrify.plot import BodePlotManager, get_domain
 import matplotlib.pyplot as plt
 
-import math, cmath
+from deprecated.value import farad, henry, ohm, volt
+from electrify.ac import attenuation_factor
+from electrify.dc import voltage_divider
+from electrify.plot import BodePlotManager, get_domain
+from electrify.quantity.reactance import get_capacitive_reactance, get_inductive_reactance
+from electrify.sum import sum_parallel_resistance
+from electrify.value import from_string
 
-f_min=1e6
-f_max=30e6
-f_samples=1000
-f_target=15e6 
-z_load=50
+f_min = 1e6
+f_max = 30e6
+f_samples = 1000
+f_target = 15e6
+z_load = 50
 
-def circuit(f):
-    '''
+
+def circuit(frequency):
+    """
             V1      V2      V3
    VG---R---.---L---.---L---.----RL
     |       |       |       |    |
@@ -41,47 +41,43 @@ def circuit(f):
                 [C3]  [RL]
                  |     |
                 -G-   -G-
-    
-    '''
-    
-    VG = 1
-    
+    """
+
+    VG = volt(1)
+
     # Component values
-    R1 = 50
-    C1 = from_string("131.2pF") #farad(p=131.2)
-    L1 = from_string('858.4nH') #henry(n=858.4)
-    C2 = from_string('424.4pF') #farad(p=424.4)
+    R1 = ohm(50)
+    C1 = farad(from_string("131.2pF"))
+    L1 = henry(from_string("858.4nH"))
+    C2 = farad(from_string("424.4pF"))
     L2 = L1
     C3 = C1
-    RL = 50
-    
+    RL = ohm(50)
+
     # Get the reactances of all components at the frequency
-    Zc1 = get_capacitive_reactance(f, C1)
-    Zl1 = get_inductive_reactance(f, L1)
-    Zc2 = get_capacitive_reactance(f, C2)
+    Zc1 = get_capacitive_reactance(frequency, C1)
+    Zl1 = get_inductive_reactance(frequency, L1)
+    Zc2 = get_capacitive_reactance(frequency, C2)
     Zl2 = Zl1
     Zc3 = Zc1
-    
 
     # Find the impedances at each intermediate node
     ZR3 = sum_parallel_resistance([Zc3, RL])
     ZR2 = sum_parallel_resistance([Zc2, Zl2 + ZR3])
     ZR1 = sum_parallel_resistance([Zc1, Zl1 + ZR2])
-    
+
     # Calculate the voltage at each intermediate node
     V1 = voltage_divider(VG, R1, ZR1)
     V2 = voltage_divider(V1, Zl1, ZR2)
     V3 = voltage_divider(V2, Zl2, ZR3)
-    
-    
-    # print()z
+
     # print(f'  f = {hertz(f)}')
     # print(f' C1 = {str(C1): <13}  L1 = {str(L1): <13}  C2 = {str(C2): <13}')
     # print(f'Zc1 = {str(Zc1): <13} Zl1 = {str(Zl1): <13} Zc2 = {str(Zc2): <13}')
     # print(f'ZR1 = {str(ZR1): <13} ZR2 = {str(ZR2): <13} ZR3 = {str(ZR3): <13}')
     # print(f' V1 = {str(volt(V1.magnitude)): <13}  V2 = {str(volt(V2.magnitude)): <13}  V3 = {str(volt(V3.magnitude)): <10}')
 
-    return V3- V1
+    return attenuation_factor(V3 - V1)
 
 
 x_data = get_domain(f_min, f_max, f_samples)

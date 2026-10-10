@@ -11,11 +11,18 @@ AMPERE_FORMATTER = EngFormatter('A')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-def generate_domain(min, max, num_steps, max_inclusive=True) -> list:
-    step_size = (max - min) / float(num_steps)
-    domain = [min + (x * step_size) for x in range(num_steps)]
-    if max_inclusive and max not in domain:
-        domain.append(max)
+def generate_domain(start, stop, num_steps, max_inclusive=True) -> list:
+    """
+    Generate an evenly spaced numeric domain.
+
+    Examples:
+        >>> generate_domain(0, 1, 4)
+        [0.0, 0.25, 0.5, 0.75, 1]
+    """
+    step_size = (stop - start) / float(num_steps)
+    domain = [start + (x * step_size) for x in range(num_steps)]
+    if max_inclusive and stop not in domain:
+        domain.append(stop)
     return domain
 
 Scale = Literal["linear", "log"]

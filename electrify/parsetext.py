@@ -4,11 +4,11 @@ Scanning utility for analyzing input text and providing a sequence of tokens.
 This is largely used by other modules that require parsing values from string data.
 
 Example
-    >>> from electrify.value import scanner
-    >>> tokens = scanner.scan("6.32 pF")
+    >>> from electrify import parsetext
+    >>> tokens = parsetext.scan("6.32 pF")
     >>> print(tokens)
-    (Number(6.32), Magnitude('pico', 1e-12), Unit('farad'))
-    >>> if scanner.match(tokens, (scanner.NumberToken, scanner.MagnitudeToken, scanner.UnitToken)):
+    (NumberToken(value=6.32), MagnitudeToken(id='pico', magnitude=1e-12), UnitToken(id='farad'))
+    >>> if parsetext.match(tokens, (parsetext.NumberToken, parsetext.MagnitudeToken, parsetext.UnitToken)):
     ...     print("It matches!")
     It matches!
 """
@@ -265,9 +265,9 @@ def scan(text: str) -> tuple:
 
     Example:
         >>> scan("954nH")
-        (Number(954), Magnitude('nano', 1e-09), Unit('henry'))
+        (NumberToken(value=954.0), MagnitudeToken(id='nano', magnitude=1e-09), UnitToken(id='henry'))
         >>> scan("1.21 GW")
-        (Number(1.21), Magnitude('giga', 1000000000.0), Unit('watt'))
+        (NumberToken(value=1.21), MagnitudeToken(id='giga', magnitude=1000000000.0), UnitToken(id='watt'))
     """
     lexer = Lexer(text)
     return lexer.scan_all()

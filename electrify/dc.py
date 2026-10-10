@@ -11,7 +11,7 @@ logger.setLevel(logging.DEBUG)
 
 def voltage_divider(V_in: volt, R1: ohm, R2: ohm) -> volt:
     """
-    Given two resistance values in Ohms, return the divided voltage.
+    Return the output of a two-resistor voltage divider.
 
     It follows this topology:
     ```
@@ -27,11 +27,17 @@ def voltage_divider(V_in: volt, R1: ohm, R2: ohm) -> volt:
               GND
     ```
 
-    Parameters
-    ----------
-     * `V_in: V` -- Input voltage
-     * `R1: R` -- Series resistance, in Ohms (Ω)
-     * `R2: R` -- Shunt resistance, in Ohms (Ω)
+    Args:
+        V_in: Input voltage.
+        R1: Series resistance from the source to the output node.
+        R2: Shunt resistance from the output node to ground.
+
+    Returns:
+        The voltage at the output node.
+
+    Examples:
+        >>> voltage_divider(volt(12), ohm(k=2), ohm(k=1))
+        volt(4.0)
     """
     if cmath.isinf(R2) or R2 is None or R1 == 0:
         return volt(V_in)
@@ -43,15 +49,22 @@ def voltage_divider(V_in: volt, R1: ohm, R2: ohm) -> volt:
 
 def current_divider(current: ampere, Z_branch: ohm, Z_total: ohm) -> ampere:
     """
-    Given a current at a branch, determine how much of it will go to a branch.
+    Return the current through one branch of a parallel network.
+
+    The branch current is computed from total current multiplied by the ratio of
+    total impedance to branch impedance.
 
     Args:
-        current (ampere): _description_
-        Z_branch (ohm): _description_
-        Z_total (ohm): _description_
+        current: Total current entering the parallel network.
+        Z_branch: Impedance of the branch being measured.
+        Z_total: Equivalent impedance of the full parallel network.
 
     Returns:
-        ampere: _description_
+        Current through the selected branch.
+
+    Examples:
+        >>> current_divider(ampere(1), ohm(100), ohm(50))
+        ampere(0.5)
     """
     if Z_branch == 0:
         return ampere(current)
@@ -60,7 +73,7 @@ def current_divider(current: ampere, Z_branch: ohm, Z_total: ohm) -> ampere:
     return ampere(complex(current) * (Z_total / Z_branch))
 
 
-def voltage_drop(V_in:volt, R_value:ohm, R_total:ohm) -> volt:
+def voltage_drop(V_in: volt, R_value: ohm, R_total: ohm) -> volt:
     """
     Given a series of resistors, determine the voltage drop found across one of them.
 
@@ -71,6 +84,10 @@ def voltage_drop(V_in:volt, R_value:ohm, R_total:ohm) -> volt:
 
     Returns:
         volt: The drop in voltage across R_value
+
+    Examples:
+        >>> voltage_drop(volt(12), ohm(1), ohm(3))
+        volt(4.0)
     """
     return volt((R_value/R_total) * V_in)
 
@@ -80,7 +97,15 @@ def harmonic_sum(values: Sequence[_T]) -> _T:...
 @overload
 def harmonic_sum(values: Sequence[complex]) -> complex:...
 def harmonic_sum(values: Sequence[_T|complex]):
-    """Given a list of values, get the reciprocal of the sum of the reciprocal of all values."""
+    """
+    Return the reciprocal sum for a sequence of values.
+
+    This is the arithmetic behind parallel resistance and series capacitance.
+
+    Examples:
+        >>> harmonic_sum([ohm(100), ohm(100)])
+        ohm(50.0)
+    """
     try:
         return 1.0 / sum([(1.0 / n) for n in values])
     except ZeroDivisionError:
@@ -92,16 +117,22 @@ def shockley_diode_equation(
   quality_factor: float = 1.0,
   thermal_voltage: volt = volt(0.026)
   ) -> ampere:
-    """_summary_
+    """
+    Return diode current from the Shockley diode equation.
 
     Args:
-        voltage (volt): _description_
-        saturation_current (ampere): _description_
-        quality_factor (float, optional): _description_. Defaults to 1.0.
-        thermal_voltage (volt, optional): _description_. Defaults to volt(0.026).
+        voltage: Voltage across the diode.
+        saturation_current: Reverse saturation current.
+        quality_factor: Ideality factor, usually between 1 and 2.
+        thermal_voltage: Thermal voltage for the junction temperature.
 
     Returns:
-        ampere: _description_
+        Forward current predicted by the ideal diode model.
+
+    Examples:
+        >>> current = shockley_diode_equation(volt(0.65), ampere(1e-12))
+        >>> str(current)
+        '72mA'
     """
     return ampere(
       saturation_current
@@ -127,15 +158,16 @@ def thermal_voltage(temperature: float) -> volt:
       .. hlist::
          * :math:`k` is the :term:`Boltzmann constant`
          * :math:`T` is the absolute temperature of the ``p-n`` junction
-         * :math:`q` isP the :term:`elementary charge`
+        * :math:`q` is the :term:`elementary charge`
 
     Args:
-        temperature (float): _description_
+        temperature: Absolute junction temperature in kelvin.
 
     Returns:
-        volt: _description_
+        Thermal voltage for the supplied temperature.
     
     Examples:
-      >>> d
+      >>> str(thermal_voltage(300))
+      '25.9mV'
   """
   return volt(BOLTZMANN_CONSTANT * temperature / ELEMENTARY_CHARGE)

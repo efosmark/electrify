@@ -44,7 +44,7 @@ def from_string(string: str) -> ElectricUnit | float | complex:
         >>> str(v)
         '121pF'
         >>> type(v)
-        <class 'electrify.value.unit.farad'>
+        <class 'electrify.types.farad'>
 
         **Value, Unit**
 
@@ -52,7 +52,7 @@ def from_string(string: str) -> ElectricUnit | float | complex:
         >>> repr(v)
         'ohm(880.0)'
         >>> type(v)
-        <class 'electrify.value.unit.ohm'>
+        <class 'electrify.types.ohm'>
 
         **Value, Magnitude**
         No unit defaults to ``float`` or ``complex``.
@@ -103,7 +103,7 @@ def from_string(string: str) -> ElectricUnit | float | complex:
     raise TypeError('Unknown unit: {}'.format(unit_type))
 
 
-def format_value(x, places=0) -> str:
+def format_value(x, places=1) -> str:
     """
     Given an input value, format it in a string form.
 

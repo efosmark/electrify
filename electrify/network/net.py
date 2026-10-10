@@ -11,11 +11,16 @@ _T = TypeVar("_T")
 
 
 class VirtualItem:
+    """Placeholder item used for ports and ideal virtual network nodes."""
+
     def impedance(self, frequency:hertz) -> ohm:
+        """Return open-circuit impedance for virtual items."""
         return ohm(math.inf)
 
 
 class Side(enum.Enum):
+    """Two-terminal component side identifier."""
+
     A = 0
     B = 1
     
@@ -24,16 +29,21 @@ class Side(enum.Enum):
 
 
 class Edge(NamedTuple, Generic[_T]):
+    """A component terminal attached to a net."""
+
     item: _T
     pin: Side
 
 
 class Net(NamedTuple):
+    """A named electrical node inside a :class:`NetList`."""
+
     netlist: 'NetList'
     id: int
     
     @property
     def edges(self) -> frozenset[Edge]:
+        """Return the set of component terminals connected to this net."""
         return frozenset(self.netlist._nets[self])
     
     def impedance(self, frequency:hertz) -> ohm:
@@ -44,6 +54,22 @@ class Net(NamedTuple):
 
 
 class NetList(Generic[_T]):
+    """
+    Mutable collection of nets and component terminals.
+
+    ``NetList`` is the low-level graph structure used by the higher-level network
+    classes. Add component terminals with :meth:`add`, then merge electrical nodes
+    with :meth:`combine_nets`.
+
+    Examples:
+        >>> from electrify.component import R
+        >>> nl = NetList()
+        >>> r = R(ohm(100))
+        >>> a = nl.add(r, Side.A)
+        >>> b = nl.add(r, Side.B)
+        >>> len(nl.nets())
+        2
+    """
     _nets: Dict[Net, Set[Edge[_T]]]
     _edges: Dict[Edge[_T], Net]
     
@@ -85,6 +111,7 @@ class NetList(Generic[_T]):
         return item_id
     
     def new_net(self) -> Net:
+        """Create and register an empty net."""
         net_id = self._net_count
         self._net_count += 1
         net = Net(self, net_id)
@@ -92,6 +119,7 @@ class NetList(Generic[_T]):
         return net
     
     def add(self, item:_T, pin:Side, net:Optional[Net]=None) -> Net:        
+        """Attach ``item``/``pin`` to ``net`` and return the resulting net."""
         if net is None:
             net = self.new_net()
         if item not in self._item_to_id:
@@ -103,6 +131,7 @@ class NetList(Generic[_T]):
         return self._edges[edge]
     
     def get_net(self, item:_T, side:Side) -> Net:
+        """Return the net for ``item``/``side``, creating one if needed."""
         edge = Edge(item, side)
         if edge not in self._edges:
             return self.add(item, side)
@@ -121,6 +150,7 @@ class NetList(Generic[_T]):
         return self._edges[edge]
     
     def combine_nets(self, primary:Net, secondary:Net) -> Net:
+        """Merge ``secondary`` into ``primary`` and return ``primary``."""
         if primary == secondary:
             return primary
         edges = secondary.edges
@@ -138,9 +168,11 @@ class NetList(Generic[_T]):
                 self._edges[edge] = n
                 
     def nets(self) -> Sequence[Net]:
+        """Return all nets currently registered in insertion order."""
         return tuple(self._nets.keys())
 
     def export(self, exclude_virtual=True):
+        """Return a dictionary representation of nets and non-virtual items."""
         nets = {}
         items = {}
         for net in self.nets():

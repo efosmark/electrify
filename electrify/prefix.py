@@ -6,10 +6,10 @@ It also handles formatting of numbers to their most appropriate magnitude.
 """
 import cmath
 import math
-from typing import Sequence, SupportsAbs, SupportsComplex, TypeVar, cast, ClassVar, Self
+from typing import ClassVar, Self, Sequence, SupportsComplex, TypeVar, cast
 
-# Generic type to ensure magnitude conversions preserve unit type
-_V = TypeVar('_V', bound=SupportsAbs)
+# Generic type to ensure prefix conversions preserve numeric/unit types.
+_V = TypeVar('_V')
 
 class Prefix:
     """An order of magnitude."""
@@ -58,7 +58,7 @@ class Prefix:
 
     def __call__(self, value: _V) -> _V:
         """Treat the input value as if it's at the instance power, and convert it to base."""
-        return cast(_V, abs(value) * self.decimal)
+        return cast(_V, value * self.decimal)
 
 # Standard SI prefixes used in electrical systems
 femto = Prefix('femto', 'f', -15)
@@ -114,7 +114,7 @@ def _fmt(x, places, sep, unit_symbol, isimag=False):
     #return f'{value}{sep}{mag.symbol}{unit_symbol}'
 
 
-def format_prefix(x, places: int = 1, sep: str = ' ', unit_symbol='') -> str:
+def format_prefix(x, places: int = 2, sep: str = '', unit_symbol='') -> str:
     """
     Format a number with the standard array of magnitudes and their symbols.
 
@@ -133,10 +133,10 @@ def format_prefix(x, places: int = 1, sep: str = ' ', unit_symbol='') -> str:
         '999k'
 
         >>> format_prefix(complex(1.87e6, -22e-10))
-        '1.87M - 2.2jn'
+        '[1.87M - 2.2jn]'
 
         >>> format_prefix(complex(4.7e3, -22e-10), unit_symbol="Ω")
-        '4.7kΩ - 2.2jnΩ'
+        '[4.7k - 2.2jn]Ω'
 
         >>> format_prefix(6.8e-6, unit_symbol="F")
         '6.8µF'
@@ -165,9 +165,8 @@ def format_prefix(x, places: int = 1, sep: str = ' ', unit_symbol='') -> str:
         sign = "-" if x.imag < 0 else "+"
         return f'[{real} {sign} {imag}]{unit_symbol}'
 
-    value =  _fmt(x.real, places, sep, unit_symbol)
+    value = _fmt(x.real, places, sep, unit_symbol)
     return f'{value}{sep}{unit_symbol}'
-    return _fmt(x.real, places, sep, unit_symbol)
 
 def get_prefix(ident:str) -> Prefix|None:
     if ident in Prefix.by_name:

@@ -1,12 +1,28 @@
-from functools import cache
-import math, cmath
+import cmath
 import logging
-from typing import Protocol, runtime_checkable
+import math
 from .quantity.reactance import get_capacitive_reactance, get_inductive_reactance
 
 from .types import *
 
-def impedance(item:ohm|siemens|farad|henry|SupportsImpedance, frequency:hertz) -> ohm:
+def impedance(item: ohm | siemens | farad | henry | SupportsImpedance, frequency: hertz) -> ohm:
+    """
+    Coerce a component-like value to impedance at a frequency.
+
+    Args:
+        item: Resistance, admittance, capacitance, inductance, or an object with
+            an ``impedance(frequency)`` method.
+        frequency: Frequency at which reactive values should be evaluated.
+
+    Returns:
+        Equivalent impedance in ohms.
+
+    Examples:
+        >>> impedance(ohm(50), hertz(k=1))
+        ohm(50.0)
+        >>> impedance(siemens(0.02), hertz(k=1))
+        ohm(50.0)
+    """
     if isinstance(item, ohm):
         return item
     elif isinstance(item, siemens):
@@ -17,7 +33,7 @@ def impedance(item:ohm|siemens|farad|henry|SupportsImpedance, frequency:hertz) -
         return get_inductive_reactance(frequency, item)
     return item.impedance(frequency)
 
-def characteristic_impedance(ind:henry, cap:farad, res:ohm=ohm(0), f:hertz=hertz(0)):
+def characteristic_impedance(ind: henry, cap: farad, res: ohm = ohm(0), f: hertz = hertz(0)):
     """
     Provide the characteristic line impedance (Z0) measured in ohms (Ω).
 
@@ -42,12 +58,13 @@ def characteristic_impedance(ind:henry, cap:farad, res:ohm=ohm(0), f:hertz=hertz
 
     Examples:
     
-      >>> ind = henry(micro=10)
-      >>> cap = farad(pico=22)
+      >>> ind = henry(u=10)
+      >>> cap = farad(p=22)
       >>> res = ohm(1000)
-      >>> freq = hertz(mega=100)
+      >>> freq = hertz(M=100)
       >>> Z0 = characteristic_impedance(ind, cap, res, freq)
-      122
+      >>> round(Z0.real, 1)
+      1000.0
       
     """
     if res == 0:
@@ -75,6 +92,10 @@ def refl_coef(Z_src: ohm, Z_load: ohm) -> float:
 
     Returns:
         float: The ratio of the reflected voltage wave to the incident voltage wave
+
+    Examples:
+        >>> refl_coef(ohm(50), ohm(75))
+        ohm(0.2)
     """
     return (Z_load - Z_src) / (Z_load + Z_src)
 
@@ -85,6 +106,10 @@ def voltage_swr(R_ref: ohm, R_load: ohm) -> float:
     Args:
         R_ref (float): Reference resistance in Ohms
         R_load (float): Load resistance in Ohms
+
+    Examples:
+        >>> round(voltage_swr(ohm(50), ohm(75)), 1)
+        1.5
     """
     refl = magnitude(refl_coef(R_ref, R_load))
     return ((1 + refl) / (1 - refl))
@@ -95,7 +120,15 @@ def return_loss_db(
   refl_coef:float|None=None,
   SWR:float|None=None
 ) -> float:
-    """Compute the ratio of reflected power to incident power, in dB."""
+    """
+    Compute the ratio of reflected power to incident power, in dB.
+
+    Supply either incident/reflected powers, a reflection coefficient, or SWR.
+
+    Examples:
+        >>> round(return_loss_db(refl_coef=0.2), 2)
+        13.98
+    """
     if incident_power is not None and refl_power is not None:
         return -10 * math.log10(refl_power / incident_power)
     elif refl_coef is not None:
@@ -124,10 +157,14 @@ def insertion_loss_db(
     power is transferred to the circuit.
 
     Args:
-        incident_power (_type_ = None): _description_
-        refl_power (_type_ = None): _description_
-        refl_coef (_type_ = None): Reflection coefficient of the input
-        SWR (_type_ = None): _description_
+        incident_power: Power sent toward the load.
+        refl_power: Power reflected by the load.
+        refl_coef: Reflection coefficient of the input.
+        SWR: Voltage standing wave ratio.
+
+    Examples:
+        >>> round(insertion_loss_db(refl_coef=0.2), 3)
+        0.177
     """
     if incident_power is not None and refl_power is not None:
         return -10 * math.log10((incident_power - refl_power) / incident_power)
@@ -172,24 +209,34 @@ def insertion_loss(V_src: volt, R_src: ohm, R_load: ohm) -> complex:
     """
     return load_power(R_src, R_load) / available_power(V_src, R_load)
 
-def to_db(cx:complex|float):
+def to_db(cx: complex | float) -> float:
+    """
+    Convert a magnitude-like value to decibels.
+
+    Examples:
+        >>> to_db(10)
+        20.0
+    """
     return 20.0 * math.log10(magnitude(cx))
 
 def magnitude(cx) -> float:
-  """
-  For a given complex number in the form (X+jY), calculate the magnitude via the 
-  Pythagorean Theorem.
+    """
+    Return the magnitude of a real or complex value.
 
-  Args:
-      cx (complex | float): Complex input (X+jY)
+    Args:
+        cx: Real or complex value.
 
-  Returns:
-      float: _description_
-  """
-  if cx == 0:
-      return 0
-  cx = cx + 0j
-  return math.sqrt((cx.real**2) + (cx.imag**2))
+    Returns:
+        Absolute magnitude.
+
+    Examples:
+        >>> magnitude(3 + 4j)
+        5.0
+    """
+    if cx == 0:
+        return 0
+    cx = cx + 0j
+    return math.sqrt((cx.real**2) + (cx.imag**2))
 
 def hz_center_from_bw(lower: hertz, upper: hertz) -> hertz:
     """
@@ -203,10 +250,10 @@ def hz_center_from_bw(lower: hertz, upper: hertz) -> hertz:
         float: Geometric center frequency in Hertz (Hz)
 
     Examples:
-
-        >>> # Not yet provided.
+        >>> hz_center_from_bw(hertz(M=1), hertz(M=4))
+        hertz(2000000.0)
     """
-    return hertz(math.sqrt(lower * upper))
+    return hertz(math.sqrt(hertz(lower).real * hertz(upper).real))
 
 def attenuation_factor(cx) -> float:
     """
@@ -217,6 +264,10 @@ def attenuation_factor(cx) -> float:
 
     Returns:
         float : Attenuation factor in dB
+
+    Examples:
+        >>> attenuation_factor(100)
+        20.0
     
     References:
         Ludwig, R. (2000). RF Circuit Design (p. 208).
@@ -237,9 +288,13 @@ def rc_filter_cutoff(RS: ohm, RL: ohm, C: farad) -> hertz:
     the parallel combination of the source and load resistances.
 
     Args:
-        RS (float): _description_
-        RL (float): _description_
-        C (float): _description_
+        RS: Source resistance.
+        RL: Load resistance.
+        C: Shunt capacitance.
+
+    Examples:
+        >>> str(rc_filter_cutoff(ohm(k=1), ohm(k=1), farad(n=100)))
+        '3.2kHz'
 
     References:
         Hardy, J.K. (1978). Filters. High frequency circuit design (pp. 99-101).
@@ -248,23 +303,34 @@ def rc_filter_cutoff(RS: ohm, RL: ohm, C: farad) -> hertz:
     return hertz(1.0 / (2 * math.pi * (RS|RL) * C))
 
 def voltage_gain(V1: volt, Z1: ohm, V2: volt, Z2: ohm) -> float:
-    """Compute the voltage gain between two references (V1,Z1) vs (V2,Z2)."""
+    """
+    Compute voltage gain between two voltage/impedance references.
+
+    Examples:
+        >>> voltage_gain(volt(2), ohm(50), volt(1), ohm(50))
+        (2+0j)
+    """
     return (V1 * cmath.sqrt(Z2)) / (V2 * cmath.sqrt(Z1))
 
 def voltage_gain_db(V1: volt, Z1: ohm, V2: volt, Z2: ohm):
+    """Return voltage gain in dB between two voltage/impedance references."""
     return 10.0 * cmath.log10(voltage_gain(V1, Z1, V2, Z2)**2)
 
 def voltage_phase(V1: volt, Z1: ohm, V2: volt, Z2: ohm):
+    """Return the phase angle of voltage gain between two references."""
     return phase(voltage_gain(V1, Z1, V2, Z2))
 
 def complex_power(V, I):
+    """Return complex power from voltage and current."""
     return V * I * cmath.cos(phase(V) - phase(I))
 
 def power_gain_db(V1, I1, V2, I2):
+    """Return power gain in dB between two voltage/current references."""
     return 10.0 * math.log10(complex_power(V1, I1) / complex_power(V2, I2))
 
-def transducer_gain(v_src:volt, z_src:ohm, v_load:volt, z_load:ohm) -> complex:
+def transducer_gain(v_src: volt, z_src: ohm, v_load: volt, z_load: ohm) -> complex:
     """
+    Return transducer gain from source/load voltage and impedance.
 
     References:
         Hayward, W.H. (1982). Introduction to Radio Frequency Design (p. 19).
@@ -285,8 +351,12 @@ def available_power(V_in: volt, R_src: ohm) -> watt:
     Get the available power that can be delivered by a voltage source.
 
     Args:
-        V_in (float): _description_
-        R_src (float): _description_
+        V_in: Source voltage.
+        R_src: Source resistance.
+
+    Examples:
+        >>> available_power(volt(10), ohm(50))
+        watt(0.5)
      
     References:
         Hayward, W.H. (1982). Introduction to Radio Frequency Design (p. 19).
@@ -294,19 +364,19 @@ def available_power(V_in: volt, R_src: ohm) -> watt:
     return watt((V_in**2.0) / (4.0 * R_src))
 
 def load_power(R_src: ohm, R_load: ohm) -> watt:
-  """
+    """
     For a given source resistance and load resistance, compute the power applied to a load.
 
     Ref: Hayward, W.H. (1982). Introduction to Radio Frequency Design(p. 19).
 
-  Args:
-      R_src (float): Source resistance
-      R_load (float): Load resistance
+    Args:
+        R_src: Source resistance.
+        R_load: Load resistance.
 
-  Returns:
-      float: The power applied to the load, in watts
-  """
-  return watt(4.0 * R_src * R_load)
+    Returns:
+        The power applied to the load, in watts.
+    """
+    return watt(4.0 * R_src * R_load)
 
 def efficiency_in_db(P1=None, P2=None, V1=None, V2=None, I1=None, I2=None, Z1=None, Z2=None):
     # if P1 is not None and P2 is not None:
@@ -325,15 +395,18 @@ def efficiency_in_db(P1=None, P2=None, V1=None, V2=None, I1=None, I2=None, Z1=No
 
 def phase(cx: complex | float, deg: bool = True) -> float:
     """
-    _summary_
+    Return the phase angle of a real or complex value.
 
     Args:
-        cx (complex | float): _description_
-        deg (bool = False): _description_
+        cx: Real or complex input.
+        deg: Return degrees when true; radians when false.
 
     Returns:
-        float: _description_
+        Phase angle.
 
+    Examples:
+        >>> phase(1 + 1j)
+        45.0
     """
     if deg:
         if cx.real == 0:
@@ -349,11 +422,14 @@ def phase_angle(cx: complex, deg: bool = True) -> float:
 
     Args:
         cx (complex): Complex number representing the response from H(ω)
-        deg (bool = True): _description_
+        deg: Return degrees when true; radians when false.
 
     Returns:
-        float: _description_
+        Phase angle.
 
+    Examples:
+        >>> phase_angle(1 + 1j)
+        45.0
     """
     result = math.atan(cx.imag / cx.real) if cx.real != 0 else 0
     if deg:

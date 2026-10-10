@@ -3,7 +3,13 @@ Common electrical formulas.
 
 Examples
 --------
->>> # Not yet provided.
+>>> from electrify.types import farad, ohm
+>>> sum_series([ohm(10), ohm(20)])
+ohm(30.0)
+>>> sum_parallel([ohm(100), ohm(100)])
+ohm(50.0)
+>>> str(sum_parallel([farad(n=47), farad(n=100)]))
+'147nF'
 
 """
 from typing import Sequence, TypeVar, cast, overload
@@ -114,16 +120,16 @@ def sum_series(values: Sequence, sum_type=None):
 
     ** Example **
 
-    >>> from .value.unit import farad, ohm
+    >>> from electrify.types import farad, ohm
 
     >>> cap_values : list[farad] = [farad(u=10), farad(n=100), farad(n=10)]
     >>> x = sum_series(cap_values)
     >>> str(x)
-    5
+    '9.1nF'
 
     >>> resistor_values : list[ohm] = [ohm(k=5), ohm(10), ohm(M=1)]
     >>> sum_series(resistor_values)
-    ohm(136.0)
+    ohm(1005010.0)
 
     """
     if sum_type is None:

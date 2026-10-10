@@ -8,6 +8,8 @@ from .net import Edge, Net, NetList, Side, VirtualItem
 stack_logger = StackLogger(compact=True)
 
 class Port(VirtualItem):
+    """External connection point for a port network."""
+
     network:'PortNetwork'
     id:int|str
 
@@ -31,6 +33,8 @@ class Port(VirtualItem):
 
 
 class PortNetwork(NetList[SupportsImpedance]):
+    """Base class for one-port and two-port component networks."""
+
     allow_compose: ClassVar[bool] = True
     num_ports: ClassVar[int]
     ports: Dict[int|str, Port]
@@ -56,11 +60,13 @@ class PortNetwork(NetList[SupportsImpedance]):
         return self.net_from_edge(p1)
 
     def connect(self, p1:SupportsImpedance|Edge, p2:SupportsImpedance|Edge, compose:bool=True):
+        """Connect terminal ``p1`` to terminal ``p2``."""
         net1 = self._resolve_net(p1, Side.B, compose)
         net2 = self._resolve_net(p2, Side.A, compose)
         self.combine_nets(net1, net2)
     
     def series(self, *items):
+        """Connect all ``items`` in series and return the last item."""
         last = None
         for c1, c2 in zip(items, items[1:]):
             self.connect(c1, c2)
@@ -97,6 +103,8 @@ class PortNetwork(NetList[SupportsImpedance]):
 
 
 class OnePortNetwork(PortNetwork):
+    """Network with one positive/negative external port pair."""
+
     num_ports: ClassVar[int] = 1
     
     def get_pole(self, side:Side) -> Edge:
@@ -108,6 +116,15 @@ class OnePortNetwork(PortNetwork):
 
 
 class Series(OnePortNetwork):
+    """
+    One-port network that connects items in series.
+
+    Examples:
+        >>> from electrify.component import R
+        >>> network = Series(R(ohm(100)), R(ohm(220)))
+        >>> len(network.export()["items"])
+        2
+    """
     
     def __init__(self, *args, **kwargs):
         OnePortNetwork.__init__(self)
@@ -134,6 +151,8 @@ class Series(OnePortNetwork):
 
 
 class TwoPortNetwork(PortNetwork):
+    """Network with input and output port pairs."""
+
     num_ports: ClassVar[int] = 2
 
     def cascade(self):...

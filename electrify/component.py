@@ -4,6 +4,7 @@ from electrify.types import ElectricUnit, ohm, farad, henry, volt, hertz, Suppor
 from electrify.quantity.reactance import get_capacitive_reactance, get_inductive_reactance
 
 class ElectricComponent(ElectricUnit):
+    """Base class for unit-valued circuit components."""
     
     def __hash__(self):
         return hash(id(self))
@@ -12,18 +13,47 @@ class ElectricComponent(ElectricUnit):
         return f"{self.__class__.__name__}('{format_value(self)}')"
 
 class R(ElectricComponent, ohm):
-    def impedance(self, frequency:hertz) -> ohm:
+    """
+    Resistor component.
+
+    Examples:
+        >>> R(ohm(k=1)).impedance(hertz(k=10))
+        ohm(1000.0)
+    """
+
+    def impedance(self, frequency: hertz) -> ohm:
+        """Return the fixed resistance, independent of frequency."""
         return ohm(self)
 
 class C(ElectricComponent, farad):
-    def impedance(self, frequency:hertz) -> ohm:
+    """
+    Capacitor component.
+
+    Examples:
+        >>> str(C(n=100).impedance(hertz(k=1)))
+        '[0 - 1.6jk]Ω'
+    """
+
+    def impedance(self, frequency: hertz) -> ohm:
+        """Return capacitive reactance at ``frequency``."""
         return get_capacitive_reactance(frequency, self)
 
 class L(ElectricComponent, henry):
-    def impedance(self, frequency:hertz) -> ohm:
+    """
+    Inductor component.
+
+    Examples:
+        >>> str(L(m=1).impedance(hertz(k=1)))
+        '[0 + 6.3j]Ω'
+    """
+
+    def impedance(self, frequency: hertz) -> ohm:
+        """Return inductive reactance at ``frequency``."""
         return get_inductive_reactance(frequency, self)
 
 class V(ElectricComponent, volt):
+    """Voltage source with an equivalent series resistance."""
+
     ESR:ohm|SupportsImpedance
     
     def __init__(self, input:SupportsComplex|SupportsFloat, ESR:ohm|SupportsImpedance=ohm(0)):
@@ -31,6 +61,7 @@ class V(ElectricComponent, volt):
         self.ESR = ESR
     
     def impedance(self, frequency:hertz) -> ohm:
+        """Return the source equivalent series resistance at ``frequency``."""
         if isinstance(self.ESR, ohm):
             return self.ESR
         return self.ESR.impedance(frequency)

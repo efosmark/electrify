@@ -1,21 +1,72 @@
 import doctest
+import sys
+from pathlib import Path
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT))
+
 import electrify
+from electrify import ac, component, constants, dc, parsetext, prefix, sum, types, util, value
+from electrify.network import filter, fixture, net, network, nxcompat, solve
+from electrify.quantity import (
+    angular_frequency,
+    capacitance,
+    charge,
+    current,
+    duration,
+    energy,
+    frequency,
+    impedance,
+    inductance,
+    magnetic_flux,
+    phase,
+    power,
+    reactance,
+    resistance,
+    voltage,
+    wavelength,
+)
 
 
 modules = [
-    electrify.value,
-    electrify.value.unit1,
-    electrify.value.prefix,
-    electrify.value.scanner,
-    electrify.value.scanner.lexer,
-    electrify.value.scanner.tokens,
-    electrify.network,
-    # electrify.quantity,
-    # electrify.
-    # electrify.circuit.circuit,
-    # electrify.circuit.reducer,
-    # electrify.circuit.solver,
+    ac,
+    component,
+    constants,
+    dc,
+    filter,
+    fixture,
+    net,
+    network,
+    nxcompat,
+    parsetext,
+    angular_frequency,
+    capacitance,
+    charge,
+    current,
+    duration,
+    energy,
+    frequency,
+    impedance,
+    inductance,
+    magnetic_flux,
+    phase,
+    power,
+    reactance,
+    resistance,
+    voltage,
+    wavelength,
+    prefix,
+    solve,
+    sum,
+    types,
+    util,
+    value,
 ]
 
+failures = 0
 for m in modules:
-    doctest.testmod(m)
+    result = doctest.testmod(m)
+    failures += result.failed
+
+sys.exit(1 if failures else 0)
